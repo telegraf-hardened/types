@@ -1,7 +1,7 @@
 {
   "name": "@telegraf-hardened/types",
   "private": false,
-  "version": "9.2.3",
+  "version": "9.2.4",
   "description": "Type declarations for the Telegram API",
   "main": "index.js",
   "repository": {
@@ -23,7 +23,7 @@
   "types": "index.d.ts",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/telegraf-hardened/issues"
+    "url": "https://github.com/telegraf-hardened/types/issues"
   },
   "homepage": "https://github.com/telegraf-hardened/types#readme",
   "files": [

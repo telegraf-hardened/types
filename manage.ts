@@ -306,7 +306,7 @@ declare namespace ChatFullInfo {
     /** Information about types of gifts that are accepted by the chat or by the corresponding user for private chats */
     accepted_gift_types?: AcceptedGiftTypes[];
     /** True, if paid media messages can be sent or forwarded to the channel chat. The field is available only for channel chats. */
-    can_send_paid_media?: true;
+    can_send_paid_media: boolean;
     /** The time after which all messages sent to the chat will be automatically deleted; in seconds */
     message_auto_delete_time?: number;
     /** True, if messages from the chat can't be forwarded to other chats */
