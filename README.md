@@ -6,6 +6,11 @@ This project keeps Telegram Bot API types updated for Telegraf. This project pro
 
 It contains zero bytes of executable code.
 
+hardened changes:
+
+- small type fixes
+- added getUserGifts method and UserGift types
+
 ## Installation
 
 ```bash
