@@ -29,6 +29,7 @@ import type {
   UserFromGetMe,
   UserProfilePhotos,
   WebhookInfo,
+  UserGifts
 } from "./manage.ts";
 import type {
   GameHighScore,
@@ -69,32 +70,32 @@ type Params<F, M extends keyof ApiMethods<F>> = Parameters<ApiMethods<F>[M]>;
 /** Utility type providing the argument type for the given method name or `{}` if the method does not take any parameters */
 export type Opts<F> = {
   [M in keyof ApiMethods<F>]: Params<F, M>[0] extends undefined ? {}
-    : NonNullable<Params<F, M>[0]>;
+  : NonNullable<Params<F, M>[0]>;
 };
 
 export type EditMessageTextParams = {
-    /** New text of the message */
-    text: string;
-    business_connection_id?: string;
-    parse_mode?: ParseMode;
-    entities?: MessageEntity[];
-    link_preview_options?: LinkPreviewOptions;
-    reply_markup?: InlineKeyboardMarkup;
+  /** New text of the message */
+  text: string;
+  business_connection_id?: string;
+  parse_mode?: ParseMode;
+  entities?: MessageEntity[];
+  link_preview_options?: LinkPreviewOptions;
+  reply_markup?: InlineKeyboardMarkup;
 } & (
     | {
-        /** Required if inline_message_id is not specified. */
-        chat_id: number | string;
-        /** Required if inline_message_id is not specified. */
-        message_id: number;
-        inline_message_id?: never;
+      /** Required if inline_message_id is not specified. */
+      chat_id: number | string;
+      /** Required if inline_message_id is not specified. */
+      message_id: number;
+      inline_message_id?: never;
     }
     | {
-        chat_id?: never;
-        message_id?: never;
-        /** Required if chat_id and message_id are not specified. */
-        inline_message_id: string;
+      chat_id?: never;
+      message_id?: never;
+      /** Required if chat_id and message_id are not specified. */
+      inline_message_id: string;
     }
-);
+  );
 
 export type Ret<F> = {
   [M in keyof ApiMethods<F>]: ReturnType<ApiMethods<F>[M]>;
@@ -201,10 +202,10 @@ export type ApiMethods<F> = {
     reply_parameters?: ReplyParameters;
     /** Additional interface options. A object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user */
     reply_markup?:
-      | InlineKeyboardMarkup
-      | ReplyKeyboardMarkup
-      | ReplyKeyboardRemove
-      | ForceReply;
+    | InlineKeyboardMarkup
+    | ReplyKeyboardMarkup
+    | ReplyKeyboardRemove
+    | ForceReply;
   }): Message.TextMessage & Message.BusinessSentMessage;
 
   /** Use this method to forward messages of any kind. Service messages can't be forwarded. On success, the sent Message is returned. */
@@ -281,10 +282,10 @@ export type ApiMethods<F> = {
     reply_parameters?: ReplyParameters;
     /** Additional interface options. An object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user */
     reply_markup?:
-      | InlineKeyboardMarkup
-      | ReplyKeyboardMarkup
-      | ReplyKeyboardRemove
-      | ForceReply;
+    | InlineKeyboardMarkup
+    | ReplyKeyboardMarkup
+    | ReplyKeyboardRemove
+    | ForceReply;
   }): MessageId;
 
   /** Use this method to copy messages of any kind. If some of the specified messages can't be found or copied, they are skipped. Service messages, paid media messages, giveaway messages, giveaway winners messages, and invoice messages can't be copied. A quiz poll can be copied only if the value of the field correct_option_id is known to the bot. The method is analogous to the method forwardMessages, but the copied messages don't have a link to the original message. Album grouping is kept for copied messages. On success, an array of MessageId of the sent messages is returned. */
@@ -341,10 +342,10 @@ export type ApiMethods<F> = {
     reply_parameters?: ReplyParameters;
     /** Additional interface options. An object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user */
     reply_markup?:
-      | InlineKeyboardMarkup
-      | ReplyKeyboardMarkup
-      | ReplyKeyboardRemove
-      | ForceReply;
+    | InlineKeyboardMarkup
+    | ReplyKeyboardMarkup
+    | ReplyKeyboardRemove
+    | ForceReply;
   }): Message.PhotoMessage & Message.BusinessSentMessage;
 
   /** Use this method to send audio files, if you want Telegram clients to display them in the music player. Your audio must be in the .MP3 or .M4A format. On success, the sent Message is returned. Bots can currently send audio files of up to 50 MB in size, this limit may be changed in the future.
@@ -389,10 +390,10 @@ export type ApiMethods<F> = {
     reply_parameters?: ReplyParameters;
     /** Additional interface options. An object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user */
     reply_markup?:
-      | InlineKeyboardMarkup
-      | ReplyKeyboardMarkup
-      | ReplyKeyboardRemove
-      | ForceReply;
+    | InlineKeyboardMarkup
+    | ReplyKeyboardMarkup
+    | ReplyKeyboardRemove
+    | ForceReply;
   }): Message.AudioMessage & Message.BusinessSentMessage;
 
   /** Use this method to send general files. On success, the sent Message is returned. Bots can currently send files of any type of up to 50 MB in size, this limit may be changed in the future. */
@@ -431,10 +432,10 @@ export type ApiMethods<F> = {
     reply_parameters?: ReplyParameters;
     /** Additional interface options. An object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user */
     reply_markup?:
-      | InlineKeyboardMarkup
-      | ReplyKeyboardMarkup
-      | ReplyKeyboardRemove
-      | ForceReply;
+    | InlineKeyboardMarkup
+    | ReplyKeyboardMarkup
+    | ReplyKeyboardRemove
+    | ForceReply;
   }): Message.DocumentMessage & Message.BusinessSentMessage;
 
   /** Use this method to send video files, Telegram clients support MPEG4 videos (other formats may be sent as Document). On success, the sent Message is returned. Bots can currently send video files of up to 50 MB in size, this limit may be changed in the future. */
@@ -487,10 +488,10 @@ export type ApiMethods<F> = {
     reply_parameters?: ReplyParameters;
     /** Additional interface options. An object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user */
     reply_markup?:
-      | InlineKeyboardMarkup
-      | ReplyKeyboardMarkup
-      | ReplyKeyboardRemove
-      | ForceReply;
+    | InlineKeyboardMarkup
+    | ReplyKeyboardMarkup
+    | ReplyKeyboardRemove
+    | ForceReply;
   }): Message.VideoMessage & Message.BusinessSentMessage;
 
   /** Use this method to send animation files (GIF or H.264/MPEG-4 AVC video without sound). On success, the sent Message is returned. Bots can currently send animation files of up to 50 MB in size, this limit may be changed in the future. */
@@ -537,10 +538,10 @@ export type ApiMethods<F> = {
     reply_parameters?: ReplyParameters;
     /** Additional interface options. An object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user */
     reply_markup?:
-      | InlineKeyboardMarkup
-      | ReplyKeyboardMarkup
-      | ReplyKeyboardRemove
-      | ForceReply;
+    | InlineKeyboardMarkup
+    | ReplyKeyboardMarkup
+    | ReplyKeyboardRemove
+    | ForceReply;
   }): Message.AnimationMessage & Message.BusinessSentMessage;
 
   /** Use this method to send audio files, if you want Telegram clients to display the file as a playable voice message. For this to work, your audio must be in an .OGG file encoded with OPUS, or in .MP3 format, or in .M4A format (other formats may be sent as Audio or Document). On success, the sent Message is returned. Bots can currently send voice messages of up to 50 MB in size, this limit may be changed in the future. */
@@ -577,10 +578,10 @@ export type ApiMethods<F> = {
     reply_parameters?: ReplyParameters;
     /** Additional interface options. An object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user */
     reply_markup?:
-      | InlineKeyboardMarkup
-      | ReplyKeyboardMarkup
-      | ReplyKeyboardRemove
-      | ForceReply;
+    | InlineKeyboardMarkup
+    | ReplyKeyboardMarkup
+    | ReplyKeyboardRemove
+    | ForceReply;
   }): Message.VoiceMessage & Message.BusinessSentMessage;
 
   /** Use this method to send video messages. On success, the sent Message is returned.
@@ -616,10 +617,10 @@ export type ApiMethods<F> = {
     reply_parameters?: ReplyParameters;
     /** Additional interface options. An object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user */
     reply_markup?:
-      | InlineKeyboardMarkup
-      | ReplyKeyboardMarkup
-      | ReplyKeyboardRemove
-      | ForceReply;
+    | InlineKeyboardMarkup
+    | ReplyKeyboardMarkup
+    | ReplyKeyboardRemove
+    | ForceReply;
   }): Message.VideoNoteMessage & Message.BusinessSentMessage;
 
   /** Use this method to send paid media. On success, the sent Message is returned. */
@@ -658,10 +659,10 @@ export type ApiMethods<F> = {
     reply_parameters?: ReplyParameters;
     /** Additional interface options. An object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user */
     reply_markup?:
-      | InlineKeyboardMarkup
-      | ReplyKeyboardMarkup
-      | ReplyKeyboardRemove
-      | ForceReply;
+    | InlineKeyboardMarkup
+    | ReplyKeyboardMarkup
+    | ReplyKeyboardRemove
+    | ForceReply;
   }): Message.PaidMediaMessage & Message.BusinessSentMessage;
 
   /** Use this method to send a group of photos, videos, documents or audios as an album. Documents and audio files can be only grouped in an album with messages of the same type. On success, an array of Message objects that were sent is returned. */
@@ -736,10 +737,10 @@ export type ApiMethods<F> = {
     reply_parameters?: ReplyParameters;
     /** Additional interface options. An object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user */
     reply_markup?:
-      | InlineKeyboardMarkup
-      | ReplyKeyboardMarkup
-      | ReplyKeyboardRemove
-      | ForceReply;
+    | InlineKeyboardMarkup
+    | ReplyKeyboardMarkup
+    | ReplyKeyboardRemove
+    | ForceReply;
   }): Message.LocationMessage & Message.BusinessSentMessage;
 
   /** Use this method to send information about a venue. On success, the sent Message is returned. */
@@ -782,10 +783,10 @@ export type ApiMethods<F> = {
     reply_parameters?: ReplyParameters;
     /** Additional interface options. An object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user */
     reply_markup?:
-      | InlineKeyboardMarkup
-      | ReplyKeyboardMarkup
-      | ReplyKeyboardRemove
-      | ForceReply;
+    | InlineKeyboardMarkup
+    | ReplyKeyboardMarkup
+    | ReplyKeyboardRemove
+    | ForceReply;
   }): Message.VenueMessage & Message.BusinessSentMessage;
 
   /** Use this method to send phone contacts. On success, the sent Message is returned. */
@@ -820,10 +821,10 @@ export type ApiMethods<F> = {
     reply_parameters?: ReplyParameters;
     /** Additional interface options. An object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user */
     reply_markup?:
-      | InlineKeyboardMarkup
-      | ReplyKeyboardMarkup
-      | ReplyKeyboardRemove
-      | ForceReply;
+    | InlineKeyboardMarkup
+    | ReplyKeyboardMarkup
+    | ReplyKeyboardRemove
+    | ForceReply;
   }): Message.ContactMessage & Message.BusinessSentMessage;
 
   /** Use this method to send a native poll. On success, the sent Message is returned. */
@@ -874,10 +875,10 @@ export type ApiMethods<F> = {
     reply_parameters?: ReplyParameters;
     /** Additional interface options. An object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user */
     reply_markup?:
-      | InlineKeyboardMarkup
-      | ReplyKeyboardMarkup
-      | ReplyKeyboardRemove
-      | ForceReply;
+    | InlineKeyboardMarkup
+    | ReplyKeyboardMarkup
+    | ReplyKeyboardRemove
+    | ForceReply;
   }): Message.PollMessage & Message.BusinessSentMessage;
 
   /** Use this method to send a checklist on behalf of a connected business account. On success, the sent Message is returned. */
@@ -898,10 +899,10 @@ export type ApiMethods<F> = {
     reply_parameters?: ReplyParameters;
     /** An object for an inline keyboard */
     reply_markup?:
-      | InlineKeyboardMarkup
-      | ReplyKeyboardMarkup
-      | ReplyKeyboardRemove
-      | ForceReply;
+    | InlineKeyboardMarkup
+    | ReplyKeyboardMarkup
+    | ReplyKeyboardRemove
+    | ForceReply;
   }): Message.ChecklistMessage & Message.BusinessSentMessage;
 
   /** Use this method to send an animated emoji that will display a random value. On success, the sent Message is returned. */
@@ -930,10 +931,10 @@ export type ApiMethods<F> = {
     reply_parameters?: ReplyParameters;
     /** Additional interface options. An object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user */
     reply_markup?:
-      | InlineKeyboardMarkup
-      | ReplyKeyboardMarkup
-      | ReplyKeyboardRemove
-      | ForceReply;
+    | InlineKeyboardMarkup
+    | ReplyKeyboardMarkup
+    | ReplyKeyboardRemove
+    | ForceReply;
   }): Message.DiceMessage & Message.BusinessSentMessage;
 
   /** Use this method when you need to tell the user that something is happening on the bot's side. The status is set for 5 seconds or less (when a message arrives from your bot, Telegram clients clear its typing status). Returns True on success.
@@ -950,17 +951,17 @@ export type ApiMethods<F> = {
     message_thread_id?: number;
     /** Type of action to broadcast. Choose one, depending on what the user is about to receive: typing for text messages, upload_photo for photos, record_video or upload_video for videos, record_voice or upload_voice for voice notes, upload_document for general files, choose_sticker for stickers, find_location for location data, record_video_note or upload_video_note for video notes. */
     action:
-      | "typing"
-      | "upload_photo"
-      | "record_video"
-      | "upload_video"
-      | "record_voice"
-      | "upload_voice"
-      | "upload_document"
-      | "choose_sticker"
-      | "find_location"
-      | "record_video_note"
-      | "upload_video_note";
+    | "typing"
+    | "upload_photo"
+    | "record_video"
+    | "upload_video"
+    | "record_voice"
+    | "upload_voice"
+    | "upload_document"
+    | "choose_sticker"
+    | "find_location"
+    | "record_video_note"
+    | "upload_video_note";
   }): true;
 
   /** Use this method to change the chosen reactions on a message. Service messages of some types can't be reacted to. Automatically forwarded messages from a channel to its discussion group have the same available reactions as messages in the channel. Bots can't use paid reactions. Returns True on success. */
@@ -1321,12 +1322,12 @@ export type ApiMethods<F> = {
     name: string;
     /** Color of the topic icon in RGB format. Currently, must be one of 7322096 (0x6FB9F0), 16766590 (0xFFD67E), 13338331 (0xCB86DB), 9367192 (0x8EEE98), 16749490 (0xFF93B2), or 16478047 (0xFB6F5F) */
     icon_color?:
-      | 0x6FB9F0
-      | 0xFFD67E
-      | 0xCB86DB
-      | 0x8EEE98
-      | 0xFF93B2
-      | 0xFB6F5F;
+    | 0x6FB9F0
+    | 0xFFD67E
+    | 0xCB86DB
+    | 0x8EEE98
+    | 0xFF93B2
+    | 0xFB6F5F;
     /** Unique identifier of the custom emoji shown as the topic icon. Use getForumTopicIconStickers to get all allowed custom emoji identifiers. */
     icon_custom_emoji_id?: string;
   }): ForumTopic;
@@ -1555,6 +1556,18 @@ export type ApiMethods<F> = {
     text_entities?: MessageEntity[];
   }): true;
 
+  /**
+ * Returns the list of gifts that were given to the user.
+ * @param user_id Unique identifier of the target user
+ * @param offset Sequential identifier of the first gift to be returned
+ * @param limit The maximum number of gifts to be returned; 1-100. Default 100.
+ */
+  getUserGifts(params: {
+    user_id: number | string;
+    offset?: string;
+    limit?: number;
+  }): Promise<UserGifts>;
+
   /** Verifies a user on behalf of the organization which is represented by the bot. Returns True on success. */
   verifyUser(args: {
     /** Unique identifier of the target user */
@@ -1770,7 +1783,7 @@ export type ApiMethods<F> = {
     /** Unique identifier of the story to delete */
     story_id: number;
   }): true;
-  
+
   editMessageText(args: EditMessageTextParams): Message | true;
 
   /** Use this method to edit captions of messages. On success, if the edited message is not an inline message, the edited Message is returned, otherwise True is returned. Note that business messages that were not sent by the bot and do not contain an inline keyboard can only be edited within 48 hours from the time they were sent. */
@@ -1977,10 +1990,10 @@ export type ApiMethods<F> = {
     reply_parameters?: ReplyParameters;
     /** Additional interface options. An object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user */
     reply_markup?:
-      | InlineKeyboardMarkup
-      | ReplyKeyboardMarkup
-      | ReplyKeyboardRemove
-      | ForceReply;
+    | InlineKeyboardMarkup
+    | ReplyKeyboardMarkup
+    | ReplyKeyboardRemove
+    | ForceReply;
   }): Message.StickerMessage & Message.BusinessSentMessage;
 
   /** Use this method to get a sticker set. On success, a StickerSet object is returned. */
@@ -2099,9 +2112,9 @@ export type ApiMethods<F> = {
     thumbnail?: F | string;
     /** Format of the thumbnail, must be one of “static” for a .WEBP or .PNG image, “animated” for a .TGS animation, or “video” for a .WEBM video */
     format:
-      | "static"
-      | "animated"
-      | "video";
+    | "static"
+    | "animated"
+    | "video";
   }): true;
 
   /** Use this method to set the thumbnail of a custom emoji sticker set. Returns True on success. */
@@ -2397,9 +2410,9 @@ export interface InputSticker<F> {
   sticker: F | string;
   /** Format of the added sticker, must be one of “static” for a .WEBP or .PNG image, “animated” for a .TGS animation, “video” for a WEBM video */
   format:
-    | "static"
-    | "animated"
-    | "video";
+  | "static"
+  | "animated"
+  | "video";
   /** List of 1-20 emoji associated with the sticker */
   emoji_list: string[];
   /** Position where the mask should be placed on faces. For “mask” stickers only. */

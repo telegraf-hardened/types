@@ -1075,6 +1075,36 @@ export interface Gift {
   publisher_chat?: Chat;
 }
 
+/** This object represents a gift received by a user. */
+export interface UserGift {
+  /** Unique identifier of the gift copy for a specific user */
+  id: string;
+  /** The gift itself */
+  gift: Gift;
+  /** Date the gift was sent in Unix time */
+  date: number;
+  /** Optional. User that sent the gift; for bots only */
+  sender_id?: number;
+  /** Optional. Message added to the gift */
+  text?: string;
+  /** Optional. Entities that appear in the gift message */
+  entities?: MessageEntity[];
+  /** Optional. True, if the gift is upgraded to a unique one */
+  is_upgraded?: boolean;
+  /** Optional. True, if the gift is transferred to another user */
+  is_transferred?: boolean;
+}
+
+/** This object represents a list of gifts received by a user. */
+export interface UserGifts {
+  /** Total number of gifts received by the user */
+  total_count: number;
+  /** The list of gifts */
+  gifts: UserGift[];
+  /** Optional. Offset for the next page of gifts */
+  next_offset?: string;
+}
+
 /** This object represent a list of gifts. */
 export interface Gifts {
   /** The list of gifts */
