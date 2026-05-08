@@ -3,6 +3,8 @@ import type { InlineQueryResult, InlineQueryResultsButton } from "./inline.ts";
 import type {
   ForceReply,
   InlineKeyboardMarkup,
+  KeyboardButton,
+  PreparedKeyboardButton,
   ReplyKeyboardMarkup,
   ReplyKeyboardRemove,
 } from "./markup.ts";
@@ -27,9 +29,9 @@ import type {
   SuggestedPostParameters,
   UserChatBoosts,
   UserFromGetMe,
+  UserProfileAudios,
   UserProfilePhotos,
   WebhookInfo,
-  UserGifts
 } from "./manage.ts";
 import type {
   GameHighScore,
@@ -70,32 +72,8 @@ type Params<F, M extends keyof ApiMethods<F>> = Parameters<ApiMethods<F>[M]>;
 /** Utility type providing the argument type for the given method name or `{}` if the method does not take any parameters */
 export type Opts<F> = {
   [M in keyof ApiMethods<F>]: Params<F, M>[0] extends undefined ? {}
-  : NonNullable<Params<F, M>[0]>;
+    : NonNullable<Params<F, M>[0]>;
 };
-
-export type EditMessageTextParams = {
-  /** New text of the message */
-  text: string;
-  business_connection_id?: string;
-  parse_mode?: ParseMode;
-  entities?: MessageEntity[];
-  link_preview_options?: LinkPreviewOptions;
-  reply_markup?: InlineKeyboardMarkup;
-} & (
-    | {
-      /** Required if inline_message_id is not specified. */
-      chat_id: number | string;
-      /** Required if inline_message_id is not specified. */
-      message_id: number;
-      inline_message_id?: never;
-    }
-    | {
-      chat_id?: never;
-      message_id?: never;
-      /** Required if chat_id and message_id are not specified. */
-      inline_message_id: string;
-    }
-  );
 
 export type Ret<F> = {
   [M in keyof ApiMethods<F>]: ReturnType<ApiMethods<F>[M]>;
@@ -176,7 +154,7 @@ export type ApiMethods<F> = {
     business_connection_id?: string;
     /** Unique identifier for the target chat or username of the target channel (in the format `@channelusername`) */
     chat_id: number | string;
-    /** Unique identifier for the target message thread (topic) of the forum; for forum supergroups only */
+    /** Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only */
     message_thread_id?: number;
     /** Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat */
     direct_messages_topic_id?: number;
@@ -202,17 +180,17 @@ export type ApiMethods<F> = {
     reply_parameters?: ReplyParameters;
     /** Additional interface options. A object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user */
     reply_markup?:
-    | InlineKeyboardMarkup
-    | ReplyKeyboardMarkup
-    | ReplyKeyboardRemove
-    | ForceReply;
+      | InlineKeyboardMarkup
+      | ReplyKeyboardMarkup
+      | ReplyKeyboardRemove
+      | ForceReply;
   }): Message.TextMessage & Message.BusinessSentMessage;
 
   /** Use this method to forward messages of any kind. Service messages can't be forwarded. On success, the sent Message is returned. */
   forwardMessage(args: {
     /** Unique identifier for the target chat or username of the target channel (in the format `@channelusername`) */
     chat_id: number | string;
-    /** Unique identifier for the target message thread (topic) of the forum; for forum supergroups only */
+    /** Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only */
     message_thread_id?: number;
     /** Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat */
     direct_messages_topic_id?: number;
@@ -224,6 +202,8 @@ export type ApiMethods<F> = {
     disable_notification?: boolean;
     /** Protects the contents of the forwarded message from forwarding and saving */
     protect_content?: boolean;
+    /** Unique identifier of the message effect to be added to the message; only available when forwarding to private chats */
+    message_effect_id?: string;
     /** An object containing the parameters of the suggested post to send; for direct messages chats only. If the message is sent as a reply to another suggested post, then that suggested post is automatically declined. */
     suggested_post_parameters?: SuggestedPostParameters;
     /** Message identifier in the chat specified in from_chat_id */
@@ -234,7 +214,7 @@ export type ApiMethods<F> = {
   forwardMessages(args: {
     /** Unique identifier for the target chat or username of the target channel (in the format `@channelusername`) */
     chat_id: number | string;
-    /** Unique identifier for the target message thread (topic) of the forum; for forum supergroups only */
+    /** Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only */
     message_thread_id?: number;
     /** Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat */
     direct_messages_topic_id?: number;
@@ -252,7 +232,7 @@ export type ApiMethods<F> = {
   copyMessage(args: {
     /** Unique identifier for the target chat or username of the target channel (in the format `@channelusername`) */
     chat_id: number | string;
-    /** Unique identifier for the target message thread (topic) of the forum; for forum supergroups only */
+    /** Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only */
     message_thread_id?: number;
     /** Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat */
     direct_messages_topic_id?: number;
@@ -276,23 +256,25 @@ export type ApiMethods<F> = {
     protect_content?: boolean;
     /** Pass True to allow up to 1000 messages per second, ignoring broadcasting limits for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance */
     allow_paid_broadcast?: boolean;
+    /** Unique identifier of the message effect to be added to the message; only available when copying to private chats */
+    message_effect_id?: string;
     /** An object containing the parameters of the suggested post to send; for direct messages chats only. If the message is sent as a reply to another suggested post, then that suggested post is automatically declined. */
     suggested_post_parameters?: SuggestedPostParameters;
     /** Description of the message to reply to */
     reply_parameters?: ReplyParameters;
     /** Additional interface options. An object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user */
     reply_markup?:
-    | InlineKeyboardMarkup
-    | ReplyKeyboardMarkup
-    | ReplyKeyboardRemove
-    | ForceReply;
+      | InlineKeyboardMarkup
+      | ReplyKeyboardMarkup
+      | ReplyKeyboardRemove
+      | ForceReply;
   }): MessageId;
 
   /** Use this method to copy messages of any kind. If some of the specified messages can't be found or copied, they are skipped. Service messages, paid media messages, giveaway messages, giveaway winners messages, and invoice messages can't be copied. A quiz poll can be copied only if the value of the field correct_option_id is known to the bot. The method is analogous to the method forwardMessages, but the copied messages don't have a link to the original message. Album grouping is kept for copied messages. On success, an array of MessageId of the sent messages is returned. */
   copyMessages(args: {
     /** Unique identifier for the target chat or username of the target channel (in the format `@channelusername`) */
     chat_id: number | string;
-    /** Unique identifier for the target message thread (topic) of the forum; for forum supergroups only */
+    /** Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only */
     message_thread_id?: number;
     /** Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat */
     direct_messages_topic_id?: number;
@@ -314,7 +296,7 @@ export type ApiMethods<F> = {
     business_connection_id?: string;
     /** Unique identifier for the target chat or username of the target channel (in the format `@channelusername`) */
     chat_id: number | string;
-    /** Unique identifier for the target message thread (topic) of the forum; for forum supergroups only */
+    /** Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only */
     message_thread_id?: number;
     /** Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat */
     direct_messages_topic_id?: number;
@@ -342,10 +324,10 @@ export type ApiMethods<F> = {
     reply_parameters?: ReplyParameters;
     /** Additional interface options. An object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user */
     reply_markup?:
-    | InlineKeyboardMarkup
-    | ReplyKeyboardMarkup
-    | ReplyKeyboardRemove
-    | ForceReply;
+      | InlineKeyboardMarkup
+      | ReplyKeyboardMarkup
+      | ReplyKeyboardRemove
+      | ForceReply;
   }): Message.PhotoMessage & Message.BusinessSentMessage;
 
   /** Use this method to send audio files, if you want Telegram clients to display them in the music player. Your audio must be in the .MP3 or .M4A format. On success, the sent Message is returned. Bots can currently send audio files of up to 50 MB in size, this limit may be changed in the future.
@@ -356,7 +338,7 @@ export type ApiMethods<F> = {
     business_connection_id?: string;
     /** Unique identifier for the target chat or username of the target channel (in the format `@channelusername`) */
     chat_id: number | string;
-    /** Unique identifier for the target message thread (topic) of the forum; for forum supergroups only */
+    /** Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only */
     message_thread_id?: number;
     /** Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat */
     direct_messages_topic_id?: number;
@@ -390,10 +372,10 @@ export type ApiMethods<F> = {
     reply_parameters?: ReplyParameters;
     /** Additional interface options. An object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user */
     reply_markup?:
-    | InlineKeyboardMarkup
-    | ReplyKeyboardMarkup
-    | ReplyKeyboardRemove
-    | ForceReply;
+      | InlineKeyboardMarkup
+      | ReplyKeyboardMarkup
+      | ReplyKeyboardRemove
+      | ForceReply;
   }): Message.AudioMessage & Message.BusinessSentMessage;
 
   /** Use this method to send general files. On success, the sent Message is returned. Bots can currently send files of any type of up to 50 MB in size, this limit may be changed in the future. */
@@ -402,7 +384,7 @@ export type ApiMethods<F> = {
     business_connection_id?: string;
     /** Unique identifier for the target chat or username of the target channel (in the format `@channelusername`) */
     chat_id: number | string;
-    /** Unique identifier for the target message thread (topic) of the forum; for forum supergroups only */
+    /** Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only */
     message_thread_id?: number;
     /** Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat */
     direct_messages_topic_id?: number;
@@ -432,10 +414,10 @@ export type ApiMethods<F> = {
     reply_parameters?: ReplyParameters;
     /** Additional interface options. An object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user */
     reply_markup?:
-    | InlineKeyboardMarkup
-    | ReplyKeyboardMarkup
-    | ReplyKeyboardRemove
-    | ForceReply;
+      | InlineKeyboardMarkup
+      | ReplyKeyboardMarkup
+      | ReplyKeyboardRemove
+      | ForceReply;
   }): Message.DocumentMessage & Message.BusinessSentMessage;
 
   /** Use this method to send video files, Telegram clients support MPEG4 videos (other formats may be sent as Document). On success, the sent Message is returned. Bots can currently send video files of up to 50 MB in size, this limit may be changed in the future. */
@@ -444,7 +426,7 @@ export type ApiMethods<F> = {
     business_connection_id?: string;
     /** Unique identifier for the target chat or username of the target channel (in the format `@channelusername`) */
     chat_id: number | string;
-    /** Unique identifier for the target message thread (topic) of the forum; for forum supergroups only */
+    /** Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only */
     message_thread_id?: number;
     /** Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat */
     direct_messages_topic_id?: number;
@@ -488,10 +470,10 @@ export type ApiMethods<F> = {
     reply_parameters?: ReplyParameters;
     /** Additional interface options. An object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user */
     reply_markup?:
-    | InlineKeyboardMarkup
-    | ReplyKeyboardMarkup
-    | ReplyKeyboardRemove
-    | ForceReply;
+      | InlineKeyboardMarkup
+      | ReplyKeyboardMarkup
+      | ReplyKeyboardRemove
+      | ForceReply;
   }): Message.VideoMessage & Message.BusinessSentMessage;
 
   /** Use this method to send animation files (GIF or H.264/MPEG-4 AVC video without sound). On success, the sent Message is returned. Bots can currently send animation files of up to 50 MB in size, this limit may be changed in the future. */
@@ -500,7 +482,7 @@ export type ApiMethods<F> = {
     business_connection_id?: string;
     /** Unique identifier for the target chat or username of the target channel (in the format `@channelusername`) */
     chat_id: number | string;
-    /** Unique identifier for the target message thread (topic) of the forum; for forum supergroups only */
+    /** Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only */
     message_thread_id?: number;
     /** Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat */
     direct_messages_topic_id?: number;
@@ -538,10 +520,10 @@ export type ApiMethods<F> = {
     reply_parameters?: ReplyParameters;
     /** Additional interface options. An object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user */
     reply_markup?:
-    | InlineKeyboardMarkup
-    | ReplyKeyboardMarkup
-    | ReplyKeyboardRemove
-    | ForceReply;
+      | InlineKeyboardMarkup
+      | ReplyKeyboardMarkup
+      | ReplyKeyboardRemove
+      | ForceReply;
   }): Message.AnimationMessage & Message.BusinessSentMessage;
 
   /** Use this method to send audio files, if you want Telegram clients to display the file as a playable voice message. For this to work, your audio must be in an .OGG file encoded with OPUS, or in .MP3 format, or in .M4A format (other formats may be sent as Audio or Document). On success, the sent Message is returned. Bots can currently send voice messages of up to 50 MB in size, this limit may be changed in the future. */
@@ -550,7 +532,7 @@ export type ApiMethods<F> = {
     business_connection_id?: string;
     /** Unique identifier for the target chat or username of the target channel (in the format `@channelusername`) */
     chat_id: number | string;
-    /** Unique identifier for the target message thread (topic) of the forum; for forum supergroups only */
+    /** Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only */
     message_thread_id?: number;
     /** Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat */
     direct_messages_topic_id?: number;
@@ -578,10 +560,10 @@ export type ApiMethods<F> = {
     reply_parameters?: ReplyParameters;
     /** Additional interface options. An object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user */
     reply_markup?:
-    | InlineKeyboardMarkup
-    | ReplyKeyboardMarkup
-    | ReplyKeyboardRemove
-    | ForceReply;
+      | InlineKeyboardMarkup
+      | ReplyKeyboardMarkup
+      | ReplyKeyboardRemove
+      | ForceReply;
   }): Message.VoiceMessage & Message.BusinessSentMessage;
 
   /** Use this method to send video messages. On success, the sent Message is returned.
@@ -591,7 +573,7 @@ export type ApiMethods<F> = {
     business_connection_id?: string;
     /** Unique identifier for the target chat or username of the target channel (in the format `@channelusername`) */
     chat_id: number | string;
-    /** Unique identifier for the target message thread (topic) of the forum; for forum supergroups only */
+    /** Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only */
     message_thread_id?: number;
     /** Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat */
     direct_messages_topic_id?: number;
@@ -617,10 +599,10 @@ export type ApiMethods<F> = {
     reply_parameters?: ReplyParameters;
     /** Additional interface options. An object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user */
     reply_markup?:
-    | InlineKeyboardMarkup
-    | ReplyKeyboardMarkup
-    | ReplyKeyboardRemove
-    | ForceReply;
+      | InlineKeyboardMarkup
+      | ReplyKeyboardMarkup
+      | ReplyKeyboardRemove
+      | ForceReply;
   }): Message.VideoNoteMessage & Message.BusinessSentMessage;
 
   /** Use this method to send paid media. On success, the sent Message is returned. */
@@ -629,7 +611,7 @@ export type ApiMethods<F> = {
     business_connection_id?: string;
     /** Unique identifier for the target chat or username of the target channel (in the format `@channelusername`). If the chat is a channel, all Telegram Star proceeds from this media will be credited to the chat's balance. Otherwise, they will be credited to the bot's balance. */
     chat_id: number | string;
-    /** Unique identifier for the target message thread (topic) of the forum; for forum supergroups only */
+    /** Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only */
     message_thread_id?: number;
     /** Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat */
     direct_messages_topic_id?: number;
@@ -659,10 +641,10 @@ export type ApiMethods<F> = {
     reply_parameters?: ReplyParameters;
     /** Additional interface options. An object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user */
     reply_markup?:
-    | InlineKeyboardMarkup
-    | ReplyKeyboardMarkup
-    | ReplyKeyboardRemove
-    | ForceReply;
+      | InlineKeyboardMarkup
+      | ReplyKeyboardMarkup
+      | ReplyKeyboardRemove
+      | ForceReply;
   }): Message.PaidMediaMessage & Message.BusinessSentMessage;
 
   /** Use this method to send a group of photos, videos, documents or audios as an album. Documents and audio files can be only grouped in an album with messages of the same type. On success, an array of Message objects that were sent is returned. */
@@ -671,7 +653,7 @@ export type ApiMethods<F> = {
     business_connection_id?: string;
     /** Unique identifier for the target chat or username of the target channel (in the format `@channelusername`) */
     chat_id: number | string;
-    /** Unique identifier for the target message thread (topic) of the forum; for forum supergroups only */
+    /** Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only */
     message_thread_id?: number;
     /** Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat */
     direct_messages_topic_id?: number;
@@ -707,7 +689,7 @@ export type ApiMethods<F> = {
     business_connection_id?: string;
     /** Unique identifier for the target chat or username of the target channel (in the format `@channelusername`) */
     chat_id: number | string;
-    /** Unique identifier for the target message thread (topic) of the forum; for forum supergroups only */
+    /** Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only */
     message_thread_id?: number;
     /** Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat */
     direct_messages_topic_id?: number;
@@ -737,10 +719,10 @@ export type ApiMethods<F> = {
     reply_parameters?: ReplyParameters;
     /** Additional interface options. An object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user */
     reply_markup?:
-    | InlineKeyboardMarkup
-    | ReplyKeyboardMarkup
-    | ReplyKeyboardRemove
-    | ForceReply;
+      | InlineKeyboardMarkup
+      | ReplyKeyboardMarkup
+      | ReplyKeyboardRemove
+      | ForceReply;
   }): Message.LocationMessage & Message.BusinessSentMessage;
 
   /** Use this method to send information about a venue. On success, the sent Message is returned. */
@@ -749,7 +731,7 @@ export type ApiMethods<F> = {
     business_connection_id?: string;
     /** Unique identifier for the target chat or username of the target channel (in the format `@channelusername`) */
     chat_id: number | string;
-    /** Unique identifier for the target message thread (topic) of the forum; for forum supergroups only */
+    /** Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only */
     message_thread_id?: number;
     /** Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat */
     direct_messages_topic_id?: number;
@@ -783,10 +765,10 @@ export type ApiMethods<F> = {
     reply_parameters?: ReplyParameters;
     /** Additional interface options. An object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user */
     reply_markup?:
-    | InlineKeyboardMarkup
-    | ReplyKeyboardMarkup
-    | ReplyKeyboardRemove
-    | ForceReply;
+      | InlineKeyboardMarkup
+      | ReplyKeyboardMarkup
+      | ReplyKeyboardRemove
+      | ForceReply;
   }): Message.VenueMessage & Message.BusinessSentMessage;
 
   /** Use this method to send phone contacts. On success, the sent Message is returned. */
@@ -795,7 +777,7 @@ export type ApiMethods<F> = {
     business_connection_id?: string;
     /** Unique identifier for the target chat or username of the target channel (in the format `@channelusername`) */
     chat_id: number | string;
-    /** Unique identifier for the target message thread (topic) of the forum; for forum supergroups only */
+    /** Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only */
     message_thread_id?: number;
     /** Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat */
     direct_messages_topic_id?: number;
@@ -821,10 +803,10 @@ export type ApiMethods<F> = {
     reply_parameters?: ReplyParameters;
     /** Additional interface options. An object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user */
     reply_markup?:
-    | InlineKeyboardMarkup
-    | ReplyKeyboardMarkup
-    | ReplyKeyboardRemove
-    | ForceReply;
+      | InlineKeyboardMarkup
+      | ReplyKeyboardMarkup
+      | ReplyKeyboardRemove
+      | ForceReply;
   }): Message.ContactMessage & Message.BusinessSentMessage;
 
   /** Use this method to send a native poll. On success, the sent Message is returned. */
@@ -833,7 +815,7 @@ export type ApiMethods<F> = {
     business_connection_id?: string;
     /** Unique identifier for the target chat or username of the target channel (in the format `@channelusername`). Polls can't be sent to channel direct messages chats. */
     chat_id: number | string;
-    /** Unique identifier for the target message thread (topic) of the forum; for forum supergroups only */
+    /** Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only */
     message_thread_id?: number;
     /** Poll question, 1-300 characters */
     question: string;
@@ -847,20 +829,34 @@ export type ApiMethods<F> = {
     is_anonymous?: boolean;
     /** Poll type, “quiz” or “regular”, defaults to “regular” */
     type?: "quiz" | "regular";
-    /** True, if the poll allows multiple answers, ignored for polls in quiz mode, defaults to False */
+    /** True, if the poll allows multiple answers, defaults to False */
     allows_multiple_answers?: boolean;
-    /** 0-based identifier of the correct answer option, required for polls in quiz mode */
-    correct_option_id?: number;
+    /** Pass True if the poll allows changing chosen answer options */
+    allows_revoting?: boolean;
+    /** Pass True if the poll options must be shown in random order */
+    shuffle_options?: boolean;
+    /** Pass True if answer options can be added to the poll after creation */
+    allow_adding_options?: boolean;
+    /** Pass True if poll results must be shown only after the poll closes */
+    hide_results_until_closes?: boolean;
+    /** 0-based identifiers of the correct answer options, required for polls in quiz mode */
+    correct_option_ids?: number[];
     /** Text that is shown when a user chooses an incorrect answer or taps on the lamp icon in a quiz-style poll, 0-200 characters with at most 2 line feeds after entities parsing */
     explanation?: string;
     /** Mode for parsing entities in the explanation. See formatting options for more details. */
     explanation_parse_mode?: ParseMode;
     /** A list of special entities that appear in the poll explanation. It can be specified instead of explanation_parse_mode */
     explanation_entities?: MessageEntity[];
-    /** Amount of time in seconds the poll will be active after creation, 5-600. Can't be used together with close_date. */
+    /** Amount of time in seconds the poll will be active after creation, 5-2628000. Can't be used together with close_date. */
     open_period?: number;
-    /** Point in time (Unix timestamp) when the poll will be automatically closed. Must be at least 5 and no more than 600 seconds in the future. Can't be used together with open_period. */
+    /** Point in time (Unix timestamp) when the poll will be automatically closed. Must be at least 5 and no more than 2628000 seconds in the future. Can't be used together with open_period. */
     close_date?: number;
+    /** Description of the poll */
+    description?: string;
+    /** Mode for parsing entities in the poll description */
+    description_parse_mode?: ParseMode;
+    /** Special entities that appear in the poll description */
+    description_entities?: MessageEntity[];
     /** Pass True if the poll needs to be immediately closed. This can be useful for poll preview. */
     is_closed?: boolean;
     /** Sends the message silently. Users will receive a notification with no sound. */
@@ -875,10 +871,10 @@ export type ApiMethods<F> = {
     reply_parameters?: ReplyParameters;
     /** Additional interface options. An object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user */
     reply_markup?:
-    | InlineKeyboardMarkup
-    | ReplyKeyboardMarkup
-    | ReplyKeyboardRemove
-    | ForceReply;
+      | InlineKeyboardMarkup
+      | ReplyKeyboardMarkup
+      | ReplyKeyboardRemove
+      | ForceReply;
   }): Message.PollMessage & Message.BusinessSentMessage;
 
   /** Use this method to send a checklist on behalf of a connected business account. On success, the sent Message is returned. */
@@ -899,10 +895,10 @@ export type ApiMethods<F> = {
     reply_parameters?: ReplyParameters;
     /** An object for an inline keyboard */
     reply_markup?:
-    | InlineKeyboardMarkup
-    | ReplyKeyboardMarkup
-    | ReplyKeyboardRemove
-    | ForceReply;
+      | InlineKeyboardMarkup
+      | ReplyKeyboardMarkup
+      | ReplyKeyboardRemove
+      | ForceReply;
   }): Message.ChecklistMessage & Message.BusinessSentMessage;
 
   /** Use this method to send an animated emoji that will display a random value. On success, the sent Message is returned. */
@@ -911,7 +907,7 @@ export type ApiMethods<F> = {
     business_connection_id?: string;
     /** Unique identifier for the target chat or username of the target channel (in the format `@channelusername`) */
     chat_id: number | string;
-    /** Unique identifier for the target message thread (topic) of the forum; for forum supergroups only */
+    /** Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only */
     message_thread_id?: number;
     /** Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat */
     direct_messages_topic_id?: number;
@@ -931,11 +927,27 @@ export type ApiMethods<F> = {
     reply_parameters?: ReplyParameters;
     /** Additional interface options. An object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user */
     reply_markup?:
-    | InlineKeyboardMarkup
-    | ReplyKeyboardMarkup
-    | ReplyKeyboardRemove
-    | ForceReply;
+      | InlineKeyboardMarkup
+      | ReplyKeyboardMarkup
+      | ReplyKeyboardRemove
+      | ForceReply;
   }): Message.DiceMessage & Message.BusinessSentMessage;
+
+  /** Use this method to stream a partial message to a user while the message is being generated; supported only for bots with forum topic mode enabled. Returns True on success. */
+  sendMessageDraft(args: {
+    /** Unique identifier for the target private chat */
+    chat_id: number;
+    /** Unique identifier for the target message thread */
+    message_thread_id?: number;
+    /** Unique identifier of the message draft; must be non-zero. Changes of drafts with the same identifier are animated */
+    draft_id: number;
+    /** Text of the message to be sent, 1-4096 characters after entities parsing */
+    text: string;
+    /** Mode for parsing entities in the message text. See formatting options for more details. */
+    parse_mode?: ParseMode;
+    /** A JSON-serialized list of special entities that appear in message text, which can be specified instead of parse_mode */
+    entities?: MessageEntity[];
+  }): true;
 
   /** Use this method when you need to tell the user that something is happening on the bot's side. The status is set for 5 seconds or less (when a message arrives from your bot, Telegram clients clear its typing status). Returns True on success.
 
@@ -947,21 +959,21 @@ export type ApiMethods<F> = {
     business_connection_id?: string;
     /** Unique identifier for the target chat or username of the target supergroup (in the format `@supergroupusername`). Channel chats and channel direct messages chats aren't supported. */
     chat_id: number | string;
-    /** Unique identifier for the target message thread; for supergroups only */
+    /** Unique identifier for the target message thread or topic of a forum; for supergroups and private chats of bots with forum topic mode enabled only */
     message_thread_id?: number;
     /** Type of action to broadcast. Choose one, depending on what the user is about to receive: typing for text messages, upload_photo for photos, record_video or upload_video for videos, record_voice or upload_voice for voice notes, upload_document for general files, choose_sticker for stickers, find_location for location data, record_video_note or upload_video_note for video notes. */
     action:
-    | "typing"
-    | "upload_photo"
-    | "record_video"
-    | "upload_video"
-    | "record_voice"
-    | "upload_voice"
-    | "upload_document"
-    | "choose_sticker"
-    | "find_location"
-    | "record_video_note"
-    | "upload_video_note";
+      | "typing"
+      | "upload_photo"
+      | "record_video"
+      | "upload_video"
+      | "record_voice"
+      | "upload_voice"
+      | "upload_document"
+      | "choose_sticker"
+      | "find_location"
+      | "record_video_note"
+      | "upload_video_note";
   }): true;
 
   /** Use this method to change the chosen reactions on a message. Service messages of some types can't be reacted to. Automatically forwarded messages from a channel to its discussion group have the same available reactions as messages in the channel. Bots can't use paid reactions. Returns True on success. */
@@ -985,6 +997,16 @@ export type ApiMethods<F> = {
     /** Limits the number of photos to be retrieved. Values between 1-100 are accepted. Defaults to 100. */
     limit?: number;
   }): UserProfilePhotos;
+
+  /** Use this method to get a list of profile audios for a user. Returns a UserProfileAudios object. */
+  getUserProfileAudios(args: {
+    /** Unique identifier of the target user */
+    user_id: number;
+    /** Sequential number of the first audio to be returned. By default, all audios are returned. */
+    offset?: number;
+    /** Limits the number of audios to be retrieved. Values between 1-100 are accepted. Defaults to 100. */
+    limit?: number;
+  }): UserProfileAudios;
 
   /** Changes the emoji status for a given user that previously allowed the bot to manage their emoji status via the Mini App method requestEmojiStatusAccess. Returns True on success. */
   setUserEmojiStatus(args: {
@@ -1080,6 +1102,8 @@ export type ApiMethods<F> = {
     can_pin_messages?: boolean;
     /** Pass True if the user is allowed to create, rename, close, and reopen forum topics; supergroups only */
     can_manage_topics?: boolean;
+    /** Pass True if the administrator can edit the tags of regular members; for groups and supergroups only */
+    can_manage_tags?: boolean;
     /** Pass True if the administrator can manage direct messages within the channel and decline suggested posts; for channels only */
     can_manage_direct_messages?: boolean;
   }): true;
@@ -1092,6 +1116,16 @@ export type ApiMethods<F> = {
     user_id: number;
     /** New custom title for the administrator; 0-16 characters, emoji are not allowed */
     custom_title: string;
+  }): true;
+
+  /** Use this method to set a tag for a regular member in a group or a supergroup. */
+  setChatMemberTag(args: {
+    /** Unique identifier for the target chat or username of the target supergroup */
+    chat_id: number | string;
+    /** Unique identifier of the target user */
+    user_id: number;
+    /** New tag for the member; 0-16 characters, emoji are not allowed */
+    tag?: string;
   }): true;
 
   /** Use this method to ban a channel chat in a supergroup or a channel. Until the chat is unbanned, the owner of the banned chat won't be able to send messages on behalf of any of their channels. The bot must be an administrator in the supergroup or channel for this to work and must have the appropriate administrator rights. Returns True on success. */
@@ -1314,7 +1348,7 @@ export type ApiMethods<F> = {
 
   /** Use this method to get custom emoji stickers, which can be used as a forum topic icon by any user. Requires no parameters. Returns an Array of Sticker objects. */
   getForumTopicIconStickers(): Sticker[];
-  /** Use this method to create a topic in a forum supergroup chat. The bot must be an administrator in the chat for this to work and must have the can_manage_topics administrator rights. Returns information about the created topic as a ForumTopic object. */
+  /** Use this method to create a topic in a forum supergroup chat or a private chat with a user. In the case of a supergroup chat the bot must be an administrator in the chat for this to work and must have the can_manage_topics administrator right. Returns information about the created topic as a ForumTopic object. */
   createForumTopic(args: {
     /** Unique identifier for the target chat or username of the target supergroup (in the format `@supergroupusername`) */
     chat_id: number | string;
@@ -1322,17 +1356,17 @@ export type ApiMethods<F> = {
     name: string;
     /** Color of the topic icon in RGB format. Currently, must be one of 7322096 (0x6FB9F0), 16766590 (0xFFD67E), 13338331 (0xCB86DB), 9367192 (0x8EEE98), 16749490 (0xFF93B2), or 16478047 (0xFB6F5F) */
     icon_color?:
-    | 0x6FB9F0
-    | 0xFFD67E
-    | 0xCB86DB
-    | 0x8EEE98
-    | 0xFF93B2
-    | 0xFB6F5F;
+      | 0x6FB9F0
+      | 0xFFD67E
+      | 0xCB86DB
+      | 0x8EEE98
+      | 0xFF93B2
+      | 0xFB6F5F;
     /** Unique identifier of the custom emoji shown as the topic icon. Use getForumTopicIconStickers to get all allowed custom emoji identifiers. */
     icon_custom_emoji_id?: string;
   }): ForumTopic;
 
-  /** Use this method to edit name and icon of a topic in a forum supergroup chat. The bot must be an administrator in the chat for this to work and must have the can_manage_topics administrator rights, unless it is the creator of the topic. Returns True on success. */
+  /** Use this method to edit name and icon of a topic in a forum supergroup chat or a private chat with a user. In the case of a supergroup chat the bot must be an administrator in the chat for this to work and must have the can_manage_topics administrator rights, unless it is the creator of the topic. Returns True on success. */
   editForumTopic(args: {
     /** Unique identifier for the target chat or username of the target supergroup (in the format `@supergroupusername`) */
     chat_id: number | string;
@@ -1360,7 +1394,7 @@ export type ApiMethods<F> = {
     message_thread_id: number;
   }): true;
 
-  /** Use this method to delete a forum topic along with all its messages in a forum supergroup chat. The bot must be an administrator in the chat for this to work and must have the can_delete_messages administrator rights. Returns True on success. */
+  /** Use this method to delete a forum topic along with all its messages in a forum supergroup chat or a private chat with a user. In the case of a supergroup chat the bot must be an administrator in the chat for this to work and must have the can_delete_messages administrator rights. Returns True on success. */
   deleteForumTopic(args: {
     /** Unique identifier for the target chat or username of the target supergroup (in the format `@supergroupusername`) */
     chat_id: number | string;
@@ -1368,7 +1402,7 @@ export type ApiMethods<F> = {
     message_thread_id: number;
   }): true;
 
-  /** Use this method to clear the list of pinned messages in a forum topic. The bot must be an administrator in the chat for this to work and must have the can_pin_messages administrator right in the supergroup. Returns True on success. */
+  /** Use this method to clear the list of pinned messages in a forum topic in a forum supergroup chat or a private chat with a user. In the case of a supergroup chat the bot must be an administrator in the chat for this to work and must have the can_pin_messages administrator right in the supergroup. Returns True on success. */
   unpinAllForumTopicMessages(args: {
     /** Unique identifier for the target chat or username of the target supergroup (in the format `@supergroupusername`) */
     chat_id: number | string;
@@ -1444,6 +1478,18 @@ export type ApiMethods<F> = {
     business_connection_id?: string;
   }): BusinessConnection;
 
+  /** Use this method to get the token of a managed bot. Returns the token as String on success. */
+  getManagedBotToken(args: {
+    /** User identifier of the managed bot whose token will be returned */
+    user_id: number;
+  }): string;
+
+  /** Use this method to revoke the current token of a managed bot and generate a new one. Returns the new token as String on success. */
+  replaceManagedBotToken(args: {
+    /** User identifier of the managed bot whose token will be replaced */
+    user_id: number;
+  }): string;
+
   /** Use this method to change the list of the bot's commands. See https://core.telegram.org/bots#commands for more details about bot commands. Returns True on success. */
   setMyCommands(args: {
     /** A list of bot commands to be set as the list of the bot's commands. At most 100 commands can be specified. */
@@ -1512,6 +1558,15 @@ export type ApiMethods<F> = {
     language_code?: string;
   }): BotShortDescription;
 
+  /** Changes the profile photo of the bot. Returns True on success. */
+  setMyProfilePhoto(args: {
+    /** The new profile photo to set */
+    photo: InputProfilePhoto<F>;
+  }): true;
+
+  /** Removes the profile photo of the bot. Requires no parameters. Returns True on success. */
+  removeMyProfilePhoto(): true;
+
   /** Use this method to change the bot's menu button in a private chat, or the default menu button. Returns True on success. */
   setChatMenuButton(args: {
     /** Unique identifier for the target private chat. If not specified, default bot's menu button will be changed */
@@ -1550,23 +1605,11 @@ export type ApiMethods<F> = {
     star_count: 1000 | 1500 | 2500;
     /** Text that will be shown along with the service message about the subscription; 0-128 characters */
     text?: string;
-    /** Mode for parsing entities in the text. See formatting options for more details. Entities other than “bold”, “italic”, “underline”, “strikethrough”, “spoiler”, and “custom_emoji” are ignored. */
+    /** Mode for parsing entities in the text. See formatting options for more details. Entities other than “bold”, “italic”, “underline”, “strikethrough”, “spoiler”, “custom_emoji”, and “date_time” are ignored. */
     text_parse_mode?: ParseMode;
-    /** A list of special entities that appear in the gift text. It can be specified instead of text_parse_mode. Entities other than “bold”, “italic”, “underline”, “strikethrough”, “spoiler”, and “custom_emoji” are ignored. */
+    /** A list of special entities that appear in the gift text. It can be specified instead of text_parse_mode. Entities other than “bold”, “italic”, “underline”, “strikethrough”, “spoiler”, “custom_emoji”, and “date_time” are ignored. */
     text_entities?: MessageEntity[];
   }): true;
-
-  /**
- * Returns the list of gifts that were given to the user.
- * @param user_id Unique identifier of the target user
- * @param offset Sequential identifier of the first gift to be returned
- * @param limit The maximum number of gifts to be returned; 1-100. Default 100.
- */
-  getUserGifts(params: {
-    user_id: number | string;
-    offset?: string;
-    limit?: number;
-  }): Promise<UserGifts>;
 
   /** Verifies a user on behalf of the organization which is represented by the bot. Returns True on success. */
   verifyUser(args: {
@@ -1692,13 +1735,65 @@ export type ApiMethods<F> = {
     exclude_saved?: boolean;
     /** Pass True to exclude gifts that can be purchased an unlimited number of times */
     exclude_unlimited?: boolean;
-    /** Pass True to exclude gifts that can be purchased a limited number of times */
-    exclude_limited?: boolean;
+    /** Pass True to exclude gifts that can be purchased a limited number of times and can be upgraded to unique */
+    exclude_limited_upgradable?: boolean;
+    /** Pass True to exclude gifts that can be purchased a limited number of times and can't be upgraded to unique */
+    exclude_limited_non_upgradable?: boolean;
+    /** Pass True to exclude unique gifts */
+    exclude_unique?: boolean;
+    /** Pass True to exclude gifts that were assigned from the TON blockchain and can't be resold or transferred in Telegram */
+    exclude_from_blockchain?: boolean;
+    /** Pass True to sort results by gift price instead of send date. Sorting is applied before pagination. */
+    sort_by_price?: boolean;
+    /** Offset of the first entry to return as received from the previous request; use empty string to get the first chunk of results */
+    offset?: string;
+    /** The maximum number of gifts to be returned; 1-100. Defaults to 100 */
+    limit?: number;
+  }): OwnedGifts;
+
+  /** Returns the gifts owned and hosted by a user. Returns OwnedGifts on success. */
+  getUserGifts(args: {
+    /** Unique identifier of the user */
+    user_id: number;
+    /** Pass True to exclude gifts that can be purchased an unlimited number of times */
+    exclude_unlimited?: boolean;
+    /** Pass True to exclude gifts that can be purchased a limited number of times and can be upgraded to unique */
+    exclude_limited_upgradable?: boolean;
+    /** Pass True to exclude gifts that can be purchased a limited number of times and can't be upgraded to unique */
+    exclude_limited_non_upgradable?: boolean;
+    /** Pass True to exclude gifts that were assigned from the TON blockchain and can't be resold or transferred in Telegram */
+    exclude_from_blockchain?: boolean;
     /** Pass True to exclude unique gifts */
     exclude_unique?: boolean;
     /** Pass True to sort results by gift price instead of send date. Sorting is applied before pagination. */
     sort_by_price?: boolean;
-    /** Offset of the first entry to return as received from the previous request; use empty string to get the first chunk of results */
+    /** Offset of the first entry to return as received from the previous request; use an empty string to get the first chunk of results */
+    offset?: string;
+    /** The maximum number of gifts to be returned; 1-100. Defaults to 100 */
+    limit?: number;
+  }): OwnedGifts;
+
+  /** Returns the gifts owned by a chat. Returns OwnedGifts on success. */
+  getChatGifts(args: {
+    /** Unique identifier for the target chat or username of the target channel (in the format `@channelusername`) */
+    chat_id: number | string;
+    /** Pass True to exclude gifts that aren't saved to the chat's profile page. Always True, unless the bot has the can_post_messages administrator right in the channel. */
+    exclude_unsaved?: boolean;
+    /** Pass True to exclude gifts that are saved to the chat's profile page. Always False, unless the bot has the can_post_messages administrator right in the channel. */
+    exclude_saved?: boolean;
+    /** Pass True to exclude gifts that can be purchased an unlimited number of times */
+    exclude_unlimited?: boolean;
+    /** Pass True to exclude gifts that can be purchased a limited number of times and can be upgraded to unique */
+    exclude_limited_upgradable?: boolean;
+    /** Pass True to exclude gifts that can be purchased a limited number of times and can't be upgraded to unique */
+    exclude_limited_non_upgradable?: boolean;
+    /** Pass True to exclude gifts that were assigned from the TON blockchain and can't be resold or transferred in Telegram */
+    exclude_from_blockchain?: boolean;
+    /** Pass True to exclude unique gifts */
+    exclude_unique?: boolean;
+    /** Pass True to sort results by gift price instead of send date. Sorting is applied before pagination. */
+    sort_by_price?: boolean;
+    /** Offset of the first entry to return as received from the previous request; use an empty string to get the first chunk of results */
     offset?: string;
     /** The maximum number of gifts to be returned; 1-100. Defaults to 100 */
     limit?: number;
@@ -1758,6 +1853,22 @@ export type ApiMethods<F> = {
     protect_content?: boolean;
   }): Story;
 
+  /** Reposts a story on behalf of a business account from another business account. Both business accounts must be managed by the same bot, and the story on the source account must have been posted (or reposted) by the bot. Requires the can_manage_stories business bot right for both business accounts. Returns Story on success. */
+  repostStory(args: {
+    /** Unique identifier of the business connection */
+    business_connection_id: string;
+    /** Unique identifier of the chat which posted the story that should be reposted */
+    from_chat_id: number;
+    /** Unique identifier of the story that should be reposted */
+    from_story_id: number;
+    /** Period after which the story is moved to the archive, in seconds; must be one of 6 * 3600, 12 * 3600, 86400, or 2 * 86400 */
+    active_period: 21600 | 43200 | 86400 | 172800;
+    /** Pass True to keep the story accessible after it expires */
+    post_to_chat_page?: boolean;
+    /** Pass True if the content of the story must be protected from forwarding and screenshotting */
+    protect_content?: boolean;
+  }): Story;
+
   /** Edits a story previously posted by the bot on behalf of a managed business account. Requires the can_manage_stories business bot right. Returns Story on success. */
   editStory(args: {
     /** Unique identifier of the business connection */
@@ -1784,7 +1895,49 @@ export type ApiMethods<F> = {
     story_id: number;
   }): true;
 
-  editMessageText(args: EditMessageTextParams): Message | true;
+  /** Use this method to edit text and game messages in a chat. On success, the edited Message is returned. Note that business messages that were not sent by the bot and do not contain an inline keyboard can only be edited within 48 hours from the time they were sent. */
+  editMessageText(args: {
+    /** Unique identifier of the business connection on behalf of which the message to be edited was sent */
+    business_connection_id?: string;
+    /** Required if inline_message_id is not specified. Unique identifier for the target chat or username of the target channel (in the format `@channelusername`) */
+    chat_id?: number | string;
+    /** Required if inline_message_id is not specified. Identifier of the message to edit */
+    message_id?: number;
+    /** Required if chat_id and message_id are not specified. Identifier of the inline message */
+    inline_message_id?: undefined;
+    /** New text of the message, 1-4096 characters after entities parsing */
+    text: string;
+    /** Mode for parsing entities in the message text. See formatting options for more details. */
+    parse_mode?: ParseMode;
+    /** A list of special entities that appear in message text, which can be specified instead of parse_mode */
+    entities?: MessageEntity[];
+    /** Link preview generation options for the message */
+    link_preview_options?: LinkPreviewOptions;
+    /** An object for an inline keyboard. */
+    reply_markup?: InlineKeyboardMarkup;
+  }): Update.Edited & Message.TextMessage & Message.BusinessSentMessage;
+
+  /** Use this method to edit inline text and game messages. On success, True is returned. Note that business messages that were not sent by the bot and do not contain an inline keyboard can only be edited within 48 hours from the time they were sent. */
+  editMessageText(args: {
+    /** Unique identifier of the business connection on behalf of which the message to be edited was sent */
+    business_connection_id?: string;
+    /** Required if inline_message_id is not specified. Unique identifier for the target chat or username of the target channel (in the format `@channelusername`) */
+    chat_id?: undefined;
+    /** Required if inline_message_id is not specified. Identifier of the message to edit */
+    message_id?: undefined;
+    /** Required if chat_id and message_id are not specified. Identifier of the inline message */
+    inline_message_id?: string;
+    /** New text of the message, 1-4096 characters after entities parsing */
+    text: string;
+    /** Mode for parsing entities in the message text. See formatting options for more details. */
+    parse_mode?: ParseMode;
+    /** A list of special entities that appear in message text, which can be specified instead of parse_mode */
+    entities?: MessageEntity[];
+    /** Link preview generation options for the message */
+    link_preview_options?: LinkPreviewOptions;
+    /** An object for an inline keyboard. */
+    reply_markup?: InlineKeyboardMarkup;
+  }): true;
 
   /** Use this method to edit captions of messages. On success, if the edited message is not an inline message, the edited Message is returned, otherwise True is returned. Note that business messages that were not sent by the bot and do not contain an inline keyboard can only be edited within 48 hours from the time they were sent. */
   editMessageCaption(args: {
@@ -1869,6 +2022,20 @@ export type ApiMethods<F> = {
   }):
     | (Update.Edited & Message.LocationMessage & Message.BusinessSentMessage)
     | true;
+
+  /** Use this method to edit a checklist on behalf of a connected business account. On success, the edited Message is returned. */
+  editMessageChecklist(args: {
+    /** Unique identifier of the business connection on behalf of which the message will be sent */
+    business_connection_id: string;
+    /** Unique identifier for the target chat */
+    chat_id: number;
+    /** Unique identifier for the target message */
+    message_id: number;
+    /** An object for the new checklist */
+    checklist: InputChecklist;
+    /** An object for the new inline keyboard for the message */
+    reply_markup?: InlineKeyboardMarkup;
+  }): Update.Edited & Message.ChecklistMessage & Message.BusinessSentMessage;
 
   /** Use this method to edit only the reply markup of messages. On success, if the edited message is not an inline message, the edited Message is returned, otherwise True is returned. Note that business messages that were not sent by the bot and do not contain an inline keyboard can only be edited within 48 hours from the time they were sent. */
   editMessageReplyMarkup(args: {
@@ -1956,9 +2123,9 @@ export type ApiMethods<F> = {
     pay_for_upgrade?: boolean;
     /** Text that will be shown along with the gift; 0-255 characters */
     text?: string;
-    /** Mode for parsing entities in the text. See formatting options for more details. Entities other than “bold”, “italic”, “underline”, “strikethrough”, “spoiler”, and “custom_emoji” are ignored. */
+    /** Mode for parsing entities in the text. See formatting options for more details. Entities other than “bold”, “italic”, “underline”, “strikethrough”, “spoiler”, “custom_emoji”, and “date_time” are ignored. */
     text_parse_mode?: ParseMode;
-    /** A list of special entities that appear in the gift text. It can be specified instead of text_parse_mode. Entities other than “bold”, “italic”, “underline”, “strikethrough”, “spoiler”, and “custom_emoji” are ignored. */
+    /** A list of special entities that appear in the gift text. It can be specified instead of text_parse_mode. Entities other than “bold”, “italic”, “underline”, “strikethrough”, “spoiler”, “custom_emoji”, and “date_time” are ignored. */
     text_entities?: MessageEntity[];
   }): true;
 
@@ -1968,7 +2135,7 @@ export type ApiMethods<F> = {
     business_connection_id?: string;
     /** Unique identifier for the target chat or username of the target channel (in the format `@channelusername`) */
     chat_id: number | string;
-    /** Unique identifier for the target message thread (topic) of the forum; for forum supergroups only */
+    /** Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only */
     message_thread_id?: number;
     /** Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat */
     direct_messages_topic_id?: number;
@@ -1990,10 +2157,10 @@ export type ApiMethods<F> = {
     reply_parameters?: ReplyParameters;
     /** Additional interface options. An object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user */
     reply_markup?:
-    | InlineKeyboardMarkup
-    | ReplyKeyboardMarkup
-    | ReplyKeyboardRemove
-    | ForceReply;
+      | InlineKeyboardMarkup
+      | ReplyKeyboardMarkup
+      | ReplyKeyboardRemove
+      | ForceReply;
   }): Message.StickerMessage & Message.BusinessSentMessage;
 
   /** Use this method to get a sticker set. On success, a StickerSet object is returned. */
@@ -2112,9 +2279,9 @@ export type ApiMethods<F> = {
     thumbnail?: F | string;
     /** Format of the thumbnail, must be one of “static” for a .WEBP or .PNG image, “animated” for a .TGS animation, or “video” for a .WEBM video */
     format:
-    | "static"
-    | "animated"
-    | "video";
+      | "static"
+      | "animated"
+      | "video";
   }): true;
 
   /** Use this method to set the thumbnail of a custom emoji sticker set. Returns True on success. */
@@ -2174,11 +2341,22 @@ export type ApiMethods<F> = {
     allow_channel_chats?: boolean;
   }): PreparedInlineMessage;
 
+  /** Stores a keyboard button that can be used by a user within a Mini App. */
+  savePreparedKeyboardButton(args: {
+    /** Unique identifier of the target user that can use the button */
+    user_id: number;
+    /** A request_users, request_chat, or request_managed_bot keyboard button to be saved */
+    button:
+      | KeyboardButton.RequestUsers
+      | KeyboardButton.RequestChat
+      | KeyboardButton.RequestManagedBot;
+  }): PreparedKeyboardButton;
+
   /** Use this method to send invoices. On success, the sent Message is returned. */
   sendInvoice(args: {
     /** Unique identifier for the target chat or username of the target channel (in the format `@channelusername`) */
     chat_id: number | string;
-    /** Unique identifier for the target message thread (topic) of the forum; for forum supergroups only */
+    /** Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only */
     message_thread_id?: number;
     /** Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat */
     direct_messages_topic_id?: number;
@@ -2355,7 +2533,7 @@ export type ApiMethods<F> = {
     business_connection_id?: string;
     /** Unique identifier for the target chat */
     chat_id: number;
-    /** Unique identifier for the target message thread (topic) of the forum; for forum supergroups only */
+    /** Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only */
     message_thread_id?: number;
     /** Short name of the game, serves as the unique identifier for the game. Set up your games via BotFather. */
     game_short_name: string;
@@ -2410,9 +2588,9 @@ export interface InputSticker<F> {
   sticker: F | string;
   /** Format of the added sticker, must be one of “static” for a .WEBP or .PNG image, “animated” for a .TGS animation, “video” for a WEBM video */
   format:
-  | "static"
-  | "animated"
-  | "video";
+    | "static"
+    | "animated"
+    | "video";
   /** List of 1-20 emoji associated with the sticker */
   emoji_list: string[];
   /** Position where the mask should be placed on faces. For “mask” stickers only. */

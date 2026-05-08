@@ -1,6 +1,6 @@
 # Types for the Telegram Bot API
 
-[![Bot API Version](https://img.shields.io/badge/Bot%20API-v9.2-f36caf.svg?style=flat-square&logo=Telegram&labelColor=white&color=blue)](https://core.telegram.org/bots/api) [![NPM version](https://img.shields.io/npm/v/@telegraf/types?style=flat-square&logo=npm&labelColor=fff&color=c53635)](https://npmjs.com/package/@telegraf/types)
+[![Bot API Version](https://img.shields.io/badge/Bot%20API-v9.6-f36caf.svg?style=flat-square&logo=Telegram&labelColor=white&color=blue)](https://core.telegram.org/bots/api) [![NPM version](https://img.shields.io/npm/v/@telegraf-hardened/types?style=flat-square&logo=npm&labelColor=fff&color=c53635)](https://npmjs.com/package/@telegraf-hardened/types)
 
 This project keeps Telegram Bot API types updated for Telegraf. This project provides TypeScript types for the entire [Telegram Bot API](https://core.telegram.org/bots/api).
 
@@ -8,13 +8,13 @@ It contains zero bytes of executable code.
 
 hardened changes:
 
-- small type fixes
-- added getUserGifts method and UserGift types
+- Bot API 9.6 coverage aligned with the upstream Telegraf type sync
+- keeps the hardened package name and release channel
 
 ## Installation
 
 ```bash
-npm install --save-dev @telegraf/types
+npm install --save-dev @telegraf-hardened/types
 ```
 
 ## Available Types
