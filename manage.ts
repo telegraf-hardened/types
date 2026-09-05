@@ -69,6 +69,10 @@ export interface UserFromGetMe extends User {
   allows_users_to_create_topics?: boolean;
   /** True, if other bots can be created to be controlled by the bot. Returned only in getMe. */
   can_manage_bots?: boolean;
+  /** True, if the bot supports guest queries, i.e. can be called by other opted-in bots on behalf of a user. Returned only in getMe. */
+  supports_guest_queries?: boolean;
+  /** True, if the bot can send and receive join request queries. Returned only in getMe. */
+  supports_join_request_queries?: boolean;
 }
 
 export declare namespace Chat {
@@ -301,6 +305,10 @@ declare namespace ChatFullInfo {
     linked_chat_id?: number;
     /** For supergroups, the location to which the supergroup is connected */
     location?: ChatLocation;
+    /** Bot that guards the chat against unwanted join requests and members; for supergroups that support join request queries only */
+    guard_bot?: User;
+    /** Information about the community the chat belongs to, if any */
+    community?: Community;
   }
   /** Internal type representing channel chats returned from `getChat`. */
   export interface ChannelChat extends Chat.ChannelChat {
@@ -340,6 +348,8 @@ declare namespace ChatFullInfo {
     has_protected_content?: true;
     /** Unique identifier for the linked chat, i.e. the discussion group identifier for a channel and vice versa; for supergroups and channel chats. This identifier may be greater than 32 bits and some programming languages may have difficulty/silent defects in interpreting it. But it is smaller than 52 bits, so a signed 64 bit integer or double-precision float type are safe for storing this identifier. */
     linked_chat_id?: number;
+    /** Information about the community the chat belongs to, if any */
+    community?: Community;
   }
 }
 
@@ -374,6 +384,16 @@ export interface SuggestedPostParameters {
   price?: SuggestedPostPrice;
   /** Proposed send date of the post. If specified, then the date must be between 300 second and 2678400 seconds (30 days) in the future. If the field is omitted, then the post can be published at any time within 30 days at the sole discretion of the user who approves it. */
   send_date?: number;
+}
+
+/** Contains parameters of an ephemeral message that is shown only to a single user. */
+export interface EphemeralMessageParameters {
+  /** Unique identifier of the user to whom the ephemeral message must be shown */
+  receiver_user_id: number;
+  /** Unique identifier of the callback query in response to which the ephemeral message is sent, if any */
+  callback_query_id?: string;
+  /** Pass True to replace the message that contained the callback button which triggered the ephemeral message */
+  replace_callback_query_message?: boolean;
 }
 
 /** Describes a topic of a direct messages chat. */
@@ -474,6 +494,8 @@ export interface ChatAdministratorRights {
   can_manage_tags?: boolean;
   /** True, if the administrator can manage direct messages of the channel and decline suggested posts; for channels only */
   can_manage_direct_messages: boolean;
+  /** True, if the administrator can send welcome messages to new members of the chat; for private chats of managed bots only */
+  can_send_welcome_messages?: boolean;
 }
 
 /** This object contains information about one member of a chat. Currently, the following 6 types of chat members are supported:
@@ -546,6 +568,8 @@ export interface ChatMemberAdministrator extends AbstractChatMember {
   can_manage_tags?: boolean;
   /** True, if the administrator can manage direct messages of the channel and decline suggested posts; for channels only */
   can_manage_direct_messages: boolean;
+  /** True, if the administrator can send welcome messages to new members of the chat; for private chats of managed bots only */
+  can_send_welcome_messages?: boolean;
   /** Custom title for this user */
   custom_title?: string;
 }
@@ -596,6 +620,8 @@ export interface ChatMemberRestricted extends AbstractChatMember {
   can_manage_topics: boolean;
   /** True, if the user is allowed to edit their tag */
   can_edit_tag: boolean;
+  /** True, if the user is allowed to react to messages */
+  can_react_to_messages: boolean;
   /** Date when restrictions will be lifted for this user; Unix time. If 0, then the user is restricted forever */
   until_date: number;
 }
@@ -646,6 +672,8 @@ export interface ChatJoinRequest {
   bio?: string;
   /** Chat invite link that was used by the user to send the join request */
   invite_link?: ChatInviteLink;
+  /** Unique identifier of the join request query; for bots that support join request queries and were asked to review the request */
+  query_id?: string;
 }
 
 /** Describes actions that a non-administrator user is allowed to take in a chat. */
@@ -680,6 +708,8 @@ export interface ChatPermissions {
   can_manage_topics?: boolean;
   /** True, if the user is allowed to edit their tag */
   can_edit_tag?: boolean;
+  /** True, if the user is allowed to react to messages */
+  can_react_to_messages?: boolean;
 }
 
 /** This object contains information about the bot that was created to be managed by the current bot. */
@@ -694,6 +724,54 @@ export interface ManagedBotUpdated {
   user: User;
   /** Information about the bot */
   bot: User;
+}
+
+/** Describes the access settings granted by a managed bot to the bot that manages it. */
+export interface BotAccessSettings {
+  /** True, if the managing bot is allowed to send messages on behalf of the managed bot without the managed bot's account being Premium */
+  can_manage_without_premium?: boolean;
+  /** True, if the managed bot is allowed to receive and send messages to and from other opted-in bots */
+  allow_bot_to_bot_messages?: boolean;
+}
+
+/** This object represents a community: a group of related chats that can be joined and managed together. */
+export interface Community {
+  /** Unique identifier of the community */
+  id: string;
+  /** Title of the community */
+  title: string;
+  /** Community photo */
+  photo?: ChatPhoto;
+  /** Invite link of the community */
+  invite_link?: string;
+}
+
+/** Describes a service message about a chat added to a community. */
+export interface CommunityChatAdded {
+  /** The community the chat was added to */
+  community: Community;
+}
+
+/** Describes a service message about a chat removed from a community. */
+export interface CommunityChatRemoved {
+  /** The community the chat was removed from */
+  community: Community;
+}
+
+/** Describes a service message about a user joining a chat through a community. */
+export interface CommunityChatJoined {
+  /** The community through which the chat was joined */
+  community: Community;
+}
+
+/** This object represents a change in the state of a bot's subscription offered through a chat invite link. */
+export interface BotSubscriptionUpdated {
+  /** User that subscribed to the bot */
+  user: User;
+  /** Bot-specified invoice payload */
+  invoice_payload: string;
+  /** New state of the subscription ("active", "canceled", or "failed") */
+  state: "active" | "canceled" | "failed";
 }
 
 /** Describes the birthdate of a user. */

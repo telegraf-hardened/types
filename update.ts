@@ -1,5 +1,6 @@
 import type { ChosenInlineResult, InlineQuery } from "./inline.ts";
 import type {
+  BotSubscriptionUpdated,
   BusinessConnection,
   BusinessMessagesDeleted,
   Chat,
@@ -16,6 +17,7 @@ import type { CallbackQuery } from "./markup.ts";
 import type {
   CommonMessageBundle,
   Message,
+  MessageGenerationStopped,
   Poll,
   PollAnswer,
 } from "./message.ts";
@@ -165,6 +167,18 @@ export declare namespace Update {
     /** A new bot was created to be managed by the bot, or token or owner of a managed bot was changed */
     managed_bot: ManagedBotUpdated;
   }
+  export interface GuestQueryUpdate extends AbstractUpdate {
+    /** New guest message. The bot can use the field Message.guest_query_id and the method answerGuestQuery to send a message in response. */
+    guest_message: Message;
+  }
+  export interface BotSubscriptionUpdate extends AbstractUpdate {
+    /** A user's payment subscription to the bot was activated, renewed, canceled, or expired */
+    subscription: BotSubscriptionUpdated;
+  }
+  export interface StoppedMessageGenerationUpdate extends AbstractUpdate {
+    /** A user stopped the generation of a message or rich message draft */
+    stopped_message_generation: MessageGenerationStopped;
+  }
 }
 
 /** This object represents an incoming update.
@@ -192,4 +206,7 @@ export type Update =
   | Update.ChatJoinRequestUpdate
   | Update.ChatBoostUpdate
   | Update.RemovedChatBoostUpdate
-  | Update.ManagedBotUpdate;
+  | Update.ManagedBotUpdate
+  | Update.GuestQueryUpdate
+  | Update.BotSubscriptionUpdate
+  | Update.StoppedMessageGenerationUpdate;

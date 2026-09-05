@@ -5,6 +5,8 @@ import type { MaybeInaccessibleMessage } from "./message.ts";
 export interface InlineKeyboardMarkup {
   /** Array of button rows, each represented by an Array of InlineKeyboardButton objects */
   inline_keyboard: InlineKeyboardButton[][];
+  /** True, if the keyboard should force a reply from the user in addition to displaying the inline buttons */
+  force_reply?: boolean;
 }
 
 export declare namespace InlineKeyboardButton {
@@ -15,6 +17,8 @@ export declare namespace InlineKeyboardButton {
     icon_custom_emoji_id?: string;
     /** Style of the button. Must be one of “danger” (red), “success” (green) or “primary” (blue). If omitted, then an app-specific style is used. */
     style?: "danger" | "success" | "primary";
+    /** True, if the button must be shown in a disabled, non-interactive state */
+    disabled?: boolean;
   }
   export interface UrlButton extends AbstractInlineKeyboardButton {
     /** HTTP or tg:// URL to be opened when the button is pressed. Links tg://user?id=<user_id> can be used to mention a user by their identifier without using a username, if this is allowed by their privacy settings. */
@@ -113,6 +117,46 @@ export interface CopyTextButton {
   text: string;
 }
 
+/** This object represents a button that is shown in a disabled, non-interactive state. */
+export interface DisabledButton {
+  /** Label text on the button */
+  text: string;
+  /** Unique identifier of the custom emoji shown before the text of the button */
+  icon_custom_emoji_id?: string;
+  /** Style of the button. Must be one of “danger” (red), “success” (green) or “primary” (blue). If omitted, then an app-specific style is used. */
+  style?: "danger" | "success" | "primary";
+}
+
+export declare namespace RichMessageButton {
+  interface AbstractRichMessageButton {
+    /** Label text on the button */
+    text: string;
+    /** Unique identifier of the custom emoji shown before the text of the button */
+    icon_custom_emoji_id?: string;
+    /** Style of the button. Must be one of “danger” (red), “success” (green) or “primary” (blue). If omitted, then an app-specific style is used. */
+    style?: "danger" | "success" | "primary";
+  }
+  export interface UrlButton extends AbstractRichMessageButton {
+    /** HTTP or tg:// URL to be opened when the button is pressed */
+    url: string;
+  }
+  export interface CallbackButton extends AbstractRichMessageButton {
+    /** Data to be sent in a callback query to the bot when the button is pressed, 1-64 bytes */
+    callback_data: string;
+  }
+  export interface WebAppButton extends AbstractRichMessageButton {
+    /** Description of the Web App that will be launched when the user presses the button */
+    web_app: WebAppInfo;
+  }
+}
+
+/** This object represents a button belonging to the buttons block of a rich message. Exactly one of the fields other than text, icon_custom_emoji_id, and style must be used to specify the type of the button. */
+export type RichMessageButton =
+  | RichMessageButton.UrlButton
+  | RichMessageButton.CallbackButton
+  | RichMessageButton.WebAppButton
+  | DisabledButton;
+
 /** A placeholder, currently holds no information. Use BotFather to set up your game. */
 export interface CallbackGame {}
 
@@ -160,6 +204,8 @@ export interface ReplyKeyboardMarkup {
   one_time_keyboard?: boolean;
   /** The placeholder to be shown in the input field when the keyboard is active; 1-64 characters */
   input_field_placeholder?: string;
+  /** True, if the keyboard should force a reply from the user in addition to displaying the reply buttons */
+  force_reply?: boolean;
   /** Use this parameter if you want to show the keyboard to specific users only. Targets: 1) users that are `@mentioned` in the text of the Message object; 2) if the bot's message is a reply to a message in the same chat and forum topic, sender of the original message.
 
 Example: A user requests to change the bot's language, bot replies to the request with a keyboard to select the new language. Other users in the group don't see the keyboard. */
