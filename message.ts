@@ -16,10 +16,19 @@ import type {
   UniqueGift,
   User,
 } from "./manage.ts";
+import type { InlineKeyboardMarkup, RichMessageButton } from "./markup.ts";
 import type {
-  InlineKeyboardMarkup,
-  RichMessageButton,
-} from "./markup.ts";
+  InputMediaAnimation,
+  InputMediaAudio,
+  InputMediaDocument,
+  InputMediaLink,
+  InputMediaLivePhoto,
+  InputMediaLocation,
+  InputMediaPhoto,
+  InputMediaSticker,
+  InputMediaVenue,
+  InputMediaVideo,
+} from "./methods.ts";
 import type { PassportData } from "./passport.ts";
 import type { Invoice, RefundedPayment, SuccessfulPayment } from "./payment.ts";
 
@@ -91,8 +100,12 @@ export declare namespace Message {
     guest_bot_caller_chat?: Chat;
     /** Unique identifier of the guest query in response to which this message was sent */
     guest_query_id?: string;
-    /** Unique identifier of the ephemeral message, if the message is ephemeral and is only shown to a single user */
-    ephemeral_message_id?: string;
+    /** For ephemeral messages, the user who received the message */
+    receiver_user?: User;
+    /** For ephemeral messages, identifier of the ephemeral message inside this chat. The identifier may be reused for another ephemeral message after the message is deleted or expires. */
+    ephemeral_message_id?: number;
+    /** The bot that actually sent the message on behalf of the business account. Available only for outgoing messages sent on behalf of the connected business account. */
+    sender_business_bot?: User;
     /** Inline keyboard attached to the message. login_url buttons are represented as ordinary url buttons. */
     reply_markup?: InlineKeyboardMarkup;
   }
@@ -147,6 +160,8 @@ export declare namespace Message {
   export interface LivePhotoMessage extends MediaMessage {
     /** Message is a live photo, information about the live photo */
     live_photo: LivePhoto;
+    /** Available sizes of the static photo. For backward compatibility, this field is always set together with live_photo. */
+    photo: PhotoSize[];
     /** True, if the caption must be shown above the message media */
     show_caption_above_media?: true;
   }
@@ -496,17 +511,30 @@ export type ServiceMessageBundle =
   | Message.WebAppDataMessage
   | Message.CommunityChatAddedMessage
   | Message.CommunityChatRemovedMessage
-  | Message.CommunityChatJoinedMessage;
+  | Message.CommunityChatJoinedMessage
+  | Message.RefundedPaymentMessage
+  | Message.ChatBackgroundSetMessage
+  | Message.ChecklistTasksDoneMessage
+  | Message.ChecklistTasksAddedMessage
+  | Message.DirectMessagePriceChangedMessage
+  | Message.PaidMessagePriceChangedMessage
+  | Message.SuggestedPostApprovedMessage
+  | Message.SuggestedPostApprovalFailedMessage
+  | Message.SuggestedPostDeclinedMessage
+  | Message.SuggestedPostPaidMessage
+  | Message.SuggestedPostRefundedMessage;
 
 /** Helper type that bundles all possible `Message.CommonMessage`s. More specifically, bundles all messages that do have a `reply_to_message` field, i.e. are a `Message.CommonMessage`. */
 export type CommonMessageBundle =
   | Message.AnimationMessage
   | Message.AudioMessage
+  | Message.ChecklistMessage
   | Message.ContactMessage
   | Message.DiceMessage
   | Message.DocumentMessage
   | Message.GameMessage
   | Message.LocationMessage
+  | Message.PaidMediaMessage
   | Message.PhotoMessage
   | Message.LivePhotoMessage
   | Message.PollMessage
@@ -554,13 +582,13 @@ export type MaybeInaccessibleMessage =
 /** Describes an inline message sent by a Web App on behalf of a user. */
 export interface SentWebAppMessage {
   /** Identifier of the sent inline message. Available only if there is an inline keyboard attached to the message. */
-  inline_message_id: string;
+  inline_message_id?: string;
 }
 
-/** Describes a message sent by a bot in response to a guest query. */
+/** Describes an inline message sent by a guest bot. */
 export interface SentGuestMessage {
-  /** Identifier of the sent message */
-  message_id: number;
+  /** Identifier of the sent inline message */
+  inline_message_id: string;
 }
 
 /** Describes an inline message to be sent by a user of a Mini App. */
@@ -939,11 +967,18 @@ export interface ExternalReplyLivePhoto
   live_photo: LivePhoto;
 }
 
+export interface ExternalReplyChecklist extends AbstractExternalReply {
+  /** Message is a checklist */
+  checklist: Checklist;
+}
+
 /** This object contains information about a message that is being replied to, which may come from another chat or forum topic. */
 export type ExternalReplyInfo =
   | ExternalReplyAnimation
   | ExternalReplyAudio
+  | ExternalReplyChecklist
   | ExternalReplyDocument
+  | ExternalReplyPaidMedia
   | ExternalReplyPhoto
   | ExternalReplySticker
   | ExternalReplyStory
@@ -961,29 +996,40 @@ export type ExternalReplyInfo =
   | ExternalReplyVenue
   | ExternalReplyLivePhoto;
 
-/** Describes reply parameters for the message that is being sent. */
-export interface ReplyParameters {
-  /** Identifier of the message that will be replied to in the current chat, or in the chat chat_id if it is specified */
-  message_id: number;
-  /** If the message to be replied to is from a different chat, unique identifier for the chat or username of the channel (in the format `@channelusername`). Not supported for messages sent on behalf of a business account and messages from channel direct messages chats. */
-  chat_id?: number | string;
-  /** Pass True if the message should be sent even if the specified message to be replied to is not found. Always False for replies in another chat or forum topic. Always True for messages sent on behalf of a business account. */
-  allow_sending_without_reply?: boolean;
-  /** Quoted part of the message to be replied to; 0-1024 characters after entities parsing. The quote must be an exact substring of the message to be replied to, including bold, italic, underline, strikethrough, spoiler, custom_emoji, and date_time entities. The message will fail to send if the quote isn't found in the original message. */
-  quote?: string;
-  /** Mode for parsing entities in the quote. See formatting options for more details. */
-  quote_parse_mode?: ParseMode;
-  /** A list of special entities that appear in the quote. It can be specified instead of quote_parse_mode. */
-  quote_entities?: MessageEntity[];
-  /** Position of the quote in the original message in UTF-16 code units */
-  quote_position?: number;
-  /** Identifier of the specific checklist task to be replied to */
-  checklist_task_id?: number;
-  /** Persistent identifier of the specific poll option to be replied to */
-  poll_option_id?: string;
-  /** Unique identifier of the specific ephemeral message to be replied to */
-  ephemeral_message_id?: string;
-}
+/** Describes reply parameters for the message that is being sent. At least one of message_id and ephemeral_message_id must be specified. */
+export type ReplyParameters =
+  & {
+    /** If the message to be replied to is from a different chat, unique identifier for the chat or username of the bot, supergroup or channel (in the format `@username`). Not supported for messages sent on behalf of a business account, messages from channel direct messages chats and ephemeral messages. */
+    chat_id?: number | string;
+    /** Pass True if the message should be sent even if the specified message to be replied to is not found. Always False for replies in another chat or forum topic, and sent ephemeral messages. Always True for messages sent on behalf of a business account. */
+    allow_sending_without_reply?: boolean;
+    /** Quoted part of the message to be replied to; 0-1024 characters after entities parsing. The quote must be an exact substring of the message to be replied to, including bold, italic, underline, strikethrough, spoiler, custom_emoji, and date_time entities. The message will fail to send if the quote isn't found in the original message. Ignored for ephemeral messages. */
+    quote?: string;
+    /** Mode for parsing entities in the quote. See formatting options for more details. */
+    quote_parse_mode?: ParseMode;
+    /** A list of special entities that appear in the quote. It can be specified instead of quote_parse_mode. */
+    quote_entities?: MessageEntity[];
+    /** Position of the quote in the original message in UTF-16 code units */
+    quote_position?: number;
+    /** Identifier of the specific checklist task to be replied to */
+    checklist_task_id?: number;
+    /** Persistent identifier of the specific poll option to be replied to */
+    poll_option_id?: string;
+  }
+  & (
+    | {
+      /** Identifier of the message that will be replied to in the current chat, or in the chat chat_id if it is specified. Required if ephemeral_message_id isn't specified. */
+      message_id: number;
+      /** Identifier of the incoming ephemeral message that will be replied to in the current chat. A reply to an ephemeral message must itself be an ephemeral message. An ephemeral message may only be replied to within 15 seconds of being sent. Required if message_id isn't specified. */
+      ephemeral_message_id?: number;
+    }
+    | {
+      /** Identifier of the message that will be replied to in the current chat, or in the chat chat_id if it is specified. Required if ephemeral_message_id isn't specified. */
+      message_id?: number;
+      /** Identifier of the incoming ephemeral message that will be replied to in the current chat. A reply to an ephemeral message must itself be an ephemeral message. An ephemeral message may only be replied to within 15 seconds of being sent. Required if message_id isn't specified. */
+      ephemeral_message_id: number;
+    }
+  );
 
 /** This object describes the origin of a message. It can be one of
 
@@ -992,7 +1038,7 @@ export interface ReplyParameters {
 - MessageOriginChat
 - MessageOriginChannel
  */
-type MessageOrigin =
+export type MessageOrigin =
   | MessageOriginUser
   | MessageOriginHiddenUser
   | MessageOriginChat
@@ -1165,12 +1211,24 @@ export interface Video {
   file_size?: number;
 }
 
-/** This object represents a live photo: a still photo accompanied by a short looping video clip captured at the same moment. */
+/** This object represents a live photo. */
 export interface LivePhoto {
-  /** Available sizes of the still photo */
-  photo: PhotoSize[];
-  /** The short video clip that accompanies the photo */
-  video: Video;
+  /** Available sizes of the corresponding static photo */
+  photo?: PhotoSize[];
+  /** Identifier for the video file which can be used to download or reuse the file */
+  file_id: string;
+  /** Unique identifier for the video file which is supposed to be the same over time and for different bots. Can't be used to download or reuse the file. */
+  file_unique_id: string;
+  /** Video width as defined by the sender */
+  width: number;
+  /** Video height as defined by the sender */
+  height: number;
+  /** Duration of the video in seconds as defined by the sender */
+  duration: number;
+  /** MIME type of the file as defined by the sender */
+  mime_type?: string;
+  /** File size in bytes. It can be bigger than 2^31 and some programming languages may have difficulty/silent defects in interpreting it. But it has at most 52 significant bits, so a signed 64-bit integer or double-precision float type are safe for storing this value. */
+  file_size?: number;
 }
 
 /** This object represents a video message (available in Telegram apps as of v.4.0). */
@@ -1211,7 +1269,7 @@ export interface PaidMediaInfo {
   paid_media: PaidMedia[];
 }
 
-declare namespace PaidMedia {
+export declare namespace PaidMedia {
   /** The paid media isn't available before the payment. */
   export interface PaidMediaPreview {
     /** Type of the paid media, always “preview” */
@@ -1658,10 +1716,10 @@ export interface RichBlockTableCell {
   colspan?: number;
   /** The number of rows the cell spans if it is bigger than 1 */
   rowspan?: number;
-  /** Horizontal cell content alignment. Currently, one of “left”, “center”, or “right”. */
-  align?: "left" | "center" | "right";
-  /** Vertical cell content alignment. Currently, one of “top”, “middle”, or “bottom”. */
-  valign?: "top" | "middle" | "bottom";
+  /** Horizontal cell content alignment. Currently, must be one of “left”, “center”, or “right”. */
+  align: "left" | "center" | "right";
+  /** Vertical cell content alignment. Currently, must be one of “top”, “middle”, or “bottom”. */
+  valign: "top" | "middle" | "bottom";
 }
 
 /** This object represents a table within a rich message, corresponding to the HTML tag `<table>`. */
@@ -1965,71 +2023,77 @@ export interface Dice {
   value: number;
 }
 
-/** This object represents an internet link with a preview, which can be attached to a poll or its explanation. */
+/** Represents an HTTP link. */
 export interface Link {
-  /** The URL of the link */
+  /** URL of the link */
   url: string;
-  /** Title of the link preview */
-  title?: string;
-  /** Description of the link preview */
-  description?: string;
-  /** Preview photo of the link */
-  photo?: PhotoSize[];
 }
 
-declare namespace PollMedia {
-  export interface PhotoMedia {
-    /** Type of the media, always “photo” */
-    type: "photo";
-    /** The photo */
-    photo: PhotoSize[];
+export declare namespace PollMedia {
+  export interface AnimationMedia {
+    /** Media is an animation, information about the animation */
+    animation: Animation;
   }
-  export interface VideoMedia {
-    /** Type of the media, always “video” */
-    type: "video";
-    /** The video */
-    video: Video;
+  export interface AudioMedia {
+    /** Media is an audio file, information about the file; currently, can't be received in a poll option */
+    audio: Audio;
   }
-  export interface StickerMedia {
-    /** Type of the media, always “sticker” */
-    type: "sticker";
-    /** The sticker */
-    sticker: Sticker;
-  }
-  export interface LocationMedia {
-    /** Type of the media, always “location” */
-    type: "location";
-    /** The location */
-    location: Location;
-  }
-  export interface VenueMedia {
-    /** Type of the media, always “venue” */
-    type: "venue";
-    /** The venue */
-    venue: Venue;
+  export interface DocumentMedia {
+    /** Media is a general file, information about the file; currently, can't be received in a poll option */
+    document: Document;
   }
   export interface LinkMedia {
-    /** Type of the media, always “link” */
-    type: "link";
-    /** The link */
+    /** The HTTP link attached to the poll option */
     link: Link;
+  }
+  export interface LivePhotoMedia {
+    /** Media is a live photo, information about the live photo */
+    live_photo: LivePhoto;
+  }
+  export interface LocationMedia {
+    /** Media is a shared location, information about the location */
+    location: Location;
+  }
+  export interface PhotoMedia {
+    /** Media is a photo, available sizes of the photo */
+    photo: PhotoSize[];
+  }
+  export interface StickerMedia {
+    /** Media is a sticker, information about the sticker; currently, for poll options only */
+    sticker: Sticker;
+  }
+  export interface VenueMedia {
+    /** Media is a venue, information about the venue */
+    venue: Venue;
+  }
+  export interface VideoMedia {
+    /** Media is a video, information about the video */
+    video: Video;
   }
 }
 
-/** This object describes media attached to a poll question, a poll option, or a poll explanation. Currently, it can be one of
-- PollMedia.PhotoMedia
-- PollMedia.VideoMedia
-- PollMedia.StickerMedia
-- PollMedia.LocationMedia
-- PollMedia.VenueMedia
-- PollMedia.LinkMedia */
-export type PollMedia =
-  | PollMedia.PhotoMedia
-  | PollMedia.VideoMedia
-  | PollMedia.StickerMedia
-  | PollMedia.LocationMedia
-  | PollMedia.VenueMedia
-  | PollMedia.LinkMedia;
+/** Either no field of T, or exactly one required field with all others absent, so `media.photo !== undefined` narrows the whole object. */
+type AtMostOne<T> =
+  | { [K in keyof T]?: never }
+  | {
+    [K in keyof T]:
+      & Pick<T, K>
+      & { [P in Exclude<keyof T, K>]?: never };
+  }[keyof T];
+
+/** This object represents media attached to a poll. At most one of the optional fields can be present in any given object. */
+export type PollMedia = AtMostOne<
+  & PollMedia.AnimationMedia
+  & PollMedia.AudioMedia
+  & PollMedia.DocumentMedia
+  & PollMedia.LinkMedia
+  & PollMedia.LivePhotoMedia
+  & PollMedia.LocationMedia
+  & PollMedia.PhotoMedia
+  & PollMedia.StickerMedia
+  & PollMedia.VenueMedia
+  & PollMedia.VideoMedia
+>;
 
 /** This object contains information about one answer option in a poll. */
 export interface PollOption {
@@ -2051,78 +2115,54 @@ export interface PollOption {
   addition_date?: number;
 }
 
-declare namespace InputPollMedia {
-  export interface PhotoMedia {
-    /** Type of the media, must be “photo” */
-    type: "photo";
-    /** File identifier of the photo to attach; the photo must already be known to Telegram servers */
-    media: string;
-  }
-  export interface VideoMedia {
-    /** Type of the media, must be “video” */
-    type: "video";
-    /** File identifier of the video to attach; the video must already be known to Telegram servers */
-    media: string;
-  }
-  export interface StickerMedia {
-    /** Type of the media, must be “sticker” */
-    type: "sticker";
-    /** File identifier of the sticker to attach; the sticker must already be known to Telegram servers */
-    media: string;
-  }
-  export interface LocationMedia {
-    /** Type of the media, must be “location” */
-    type: "location";
-    /** Latitude of the location */
-    latitude: number;
-    /** Longitude of the location */
-    longitude: number;
-  }
-  export interface VenueMedia {
-    /** Type of the media, must be “venue” */
-    type: "venue";
-    /** Latitude of the venue */
-    latitude: number;
-    /** Longitude of the venue */
-    longitude: number;
-    /** Name of the venue */
-    title: string;
-    /** Address of the venue */
-    address: string;
-  }
-  export interface LinkMedia {
-    /** Type of the media, must be “link” */
-    type: "link";
-    /** The URL of the link */
-    url: string;
-  }
-}
+/** This object represents the content of a poll description or a quiz explanation to be sent. It should be one of
+- InputMediaAnimation
+- InputMediaAudio
+- InputMediaDocument
+- InputMediaLivePhoto
+- InputMediaLocation
+- InputMediaPhoto
+- InputMediaVenue
+- InputMediaVideo */
+export type InputPollMedia<F> =
+  | InputMediaAnimation<F>
+  | InputMediaAudio<F>
+  | InputMediaDocument<F>
+  | InputMediaLivePhoto<F>
+  | InputMediaLocation
+  | InputMediaPhoto<F>
+  | InputMediaVenue
+  | InputMediaVideo<F>;
 
-/** This object describes media that can be attached to a poll question, a poll option, or a poll explanation when creating a poll. Currently, it can be one of
-- InputPollMedia.PhotoMedia
-- InputPollMedia.VideoMedia
-- InputPollMedia.StickerMedia
-- InputPollMedia.LocationMedia
-- InputPollMedia.VenueMedia
-- InputPollMedia.LinkMedia */
-export type InputPollMedia =
-  | InputPollMedia.PhotoMedia
-  | InputPollMedia.VideoMedia
-  | InputPollMedia.StickerMedia
-  | InputPollMedia.LocationMedia
-  | InputPollMedia.VenueMedia
-  | InputPollMedia.LinkMedia;
+/** This object represents the content of a poll option to be sent. It should be one of
+- InputMediaAnimation
+- InputMediaLink
+- InputMediaLivePhoto
+- InputMediaLocation
+- InputMediaPhoto
+- InputMediaSticker
+- InputMediaVenue
+- InputMediaVideo */
+export type InputPollOptionMedia<F> =
+  | InputMediaAnimation<F>
+  | InputMediaLink
+  | InputMediaLivePhoto<F>
+  | InputMediaLocation
+  | InputMediaPhoto<F>
+  | InputMediaSticker<F>
+  | InputMediaVenue
+  | InputMediaVideo<F>;
 
 /** This object contains information about one answer option in a poll to be sent. */
-export interface InputPollOption {
+export interface InputPollOption<F> {
   /** Option text, 1-100 characters */
   text: string;
   /** Mode for parsing entities in the text. See formatting options for more details. Currently, only custom emoji entities are allowed */
   text_parse_mode?: ParseMode;
   /** A list of special entities that appear in the poll option text. It can be specified instead of text_parse_mode */
   text_entities?: MessageEntity.CustomEmoji[];
-  /** Media to attach to the option, if any */
-  media?: InputPollMedia;
+  /** Media added to the poll option */
+  media?: InputPollOptionMedia<F>;
 }
 
 /** This object represents an answer of a user in a non-anonymous poll. */
@@ -2182,8 +2222,8 @@ export interface Poll {
   description?: string;
   /** Special entities that appear in the poll description */
   description_entities?: MessageEntity[];
-  /** True, if the poll can only be voted on by members of the chat it was sent to */
-  members_only?: boolean;
+  /** True if voting is limited to users who have been members of the chat where the poll was originally sent for more than 24 hours */
+  members_only: boolean;
   /** A list of two-letter ISO 3166-1 alpha-2 country codes, if the poll can only be voted on by users from the specified countries */
   country_codes?: string[];
 }
@@ -2340,9 +2380,9 @@ export interface BackgroundTypeWallpaper {
   /** Dimming of the background in dark themes, as a percentage; 0-100 */
   dark_theme_dimming: number;
   /** True, if the wallpaper is downscaled to fit in a 450x450 square and then box-blurred with radius 12 */
-  is_blurred: boolean;
+  is_blurred?: true;
   /** True, if the background moves slightly when the device is tilted */
-  is_moving: boolean;
+  is_moving?: true;
 }
 
 /** The background is a .PNG or .TGV (gzipped subset of SVG with MIME type “application/x-tgwallpattern”) pattern to be combined with the background fill chosen by the user. */
@@ -2355,10 +2395,10 @@ export interface BackgroundTypePattern {
   fill: BackgroundFill;
   /** Intensity of the pattern when it is shown above the filled background; 0-100 */
   intensity: number;
-  /** True, if the background fill must be applied only to the pattern itself. All other pixels are black in this case. For dark themes only */
-  is_inverted: boolean;
+  /** True, if the background fill must be applied only to the pattern itself. All other pixels are black in this case. For dark themes only. */
+  is_inverted?: true;
   /** True, if the background moves slightly when the device is tilted */
-  is_moving: boolean;
+  is_moving?: true;
 }
 
 /** The background is taken directly from a built-in chat theme. */
@@ -2409,16 +2449,16 @@ export interface ForumTopicEdited {
 }
 
 /** This object represents a service message about a forum topic closed in the chat. Currently holds no information. */
-export interface ForumTopicClosed { }
+export interface ForumTopicClosed {}
 
 /** This object represents a service message about a forum topic reopened in the chat. Currently holds no information. */
-export interface ForumTopicReopened { }
+export interface ForumTopicReopened {}
 
 /** This object represents a service message about General forum topic hidden in the chat. Currently holds no information. */
-export interface GeneralForumTopicHidden { }
+export interface GeneralForumTopicHidden {}
 
 /** This object represents a service message about General forum topic unhidden in the chat. Currently holds no information. */
-export interface GeneralForumTopicUnhidden { }
+export interface GeneralForumTopicUnhidden {}
 
 /** This object contains information about a user that was shared with the bot using a KeyboardButtonRequestUsers button. **/
 export interface SharedUser {
@@ -2521,7 +2561,7 @@ export interface VideoChatScheduled {
 }
 
 /** This object represents a service message about a video chat started in the chat. Currently holds no information. */
-export interface VideoChatStarted { }
+export interface VideoChatStarted {}
 
 /** This object represents a service message about a video chat ended in the chat. */
 export interface VideoChatEnded {
@@ -2589,8 +2629,6 @@ export interface GiveawayWinners {
   was_refunded?: true;
   /** Description of additional giveaway prize */
   prize_description?: string;
-  /** True, if the giveaway is a Telegram Star giveaway. Otherwise, currently, the giveaway is a Telegram Premium giveaway. */
-  is_star_giveaway?: true;
 }
 
 export interface PaidMessagePriceChanged {
@@ -2603,7 +2641,7 @@ export interface DirectMessagePriceChanged {
   /** True, if direct messages are enabled for the channel chat; false otherwise */
   are_direct_messages_enabled: boolean;
   /** The new number of Telegram Stars that must be paid by users for each direct message sent to the channel. Does not apply to users who have been exempted by administrators. Defaults to 0. */
-  direct_message_star_count: number;
+  direct_message_star_count?: number;
 }
 
 /** Describes a service message about the approval of a suggested post. */
@@ -2621,7 +2659,7 @@ export interface SuggestedPostApprovalFailed {
   /** Message containing the suggested post whose approval has failed. Note that the Message object in this field will not contain the reply_to_message field even if it itself is a reply. */
   suggested_post_message?: Message;
   /** Expected price of the post */
-  price?: SuggestedPostPrice;
+  price: SuggestedPostPrice;
 }
 
 /** Describes a service message about the rejection of a suggested post. */
@@ -2660,6 +2698,8 @@ export interface GiveawayCompleted {
   unclaimed_prize_count?: number;
   /** Message with the giveaway that was completed, if it wasn't deleted */
   giveaway_message?: Message;
+  /** True, if the giveaway is a Telegram Star giveaway. Otherwise, currently, the giveaway is a Telegram Premium giveaway. */
+  is_star_giveaway?: true;
 }
 /** Describes the options used for link preview generation. */
 export interface LinkPreviewOptions {
@@ -2711,6 +2751,8 @@ export interface Sticker {
   mask_position?: MaskPosition;
   /** For custom emoji stickers, unique identifier of the custom emoji */
   custom_emoji_id?: string;
+  /** True, if the sticker must be repainted to a text color in messages, the color of the Telegram Premium badge in emoji status, white color on chat photos, or another appropriate color in other places */
+  needs_repainting?: true;
   /** File size in bytes */
   file_size?: number;
 }
@@ -2750,11 +2792,11 @@ export interface Game {
   /** Photo that will be displayed in the game message in chats. */
   photo: PhotoSize[];
   /** Brief description of the game or high scores included in the game message. Can be automatically edited to include current high scores for the game when the bot calls setGameScore, or manually edited using editMessageText. 0-4096 characters. */
-  text: string;
+  text?: string;
   /** Special entities that appear in text, such as usernames, URLs, bot commands, etc. */
-  text_entities: MessageEntity[];
-  /** Animation that will be displayed in the game message in chats. Upload via BotFather */
-  animation: Animation;
+  text_entities?: MessageEntity[];
+  /** Animation that will be displayed in the game message in chats. Upload via BotFather. */
+  animation?: Animation;
 }
 
 /** This object represents one row of the high scores table for a game. */

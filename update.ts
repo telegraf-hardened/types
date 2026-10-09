@@ -209,4 +209,5 @@ export type Update =
   | Update.ManagedBotUpdate
   | Update.GuestQueryUpdate
   | Update.BotSubscriptionUpdate
-  | Update.StoppedMessageGenerationUpdate;
+  | Update.StoppedMessageGenerationUpdate
+  | Update.PurchasedPaidMediaUpdate;

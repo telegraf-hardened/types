@@ -6,6 +6,7 @@ import type {
   MessageEntity,
   ParseMode,
 } from "./message.ts";
+import type { InputRichMessage } from "./methods.ts";
 import type { LabeledPrice } from "./payment.ts";
 
 /** This object represents an incoming inline query. When the user sends an empty query, your bot could return some default or trending results. */
@@ -118,7 +119,7 @@ export interface InlineQueryResultPhoto {
   /** List of special entities that appear in the caption, which can be specified instead of parse_mode */
   caption_entities?: MessageEntity[];
   /** Pass True, if the caption must be shown above the message media */
-  show_caption_above_media?: true;
+  show_caption_above_media?: boolean;
   /** Inline keyboard attached to the message */
   reply_markup?: InlineKeyboardMarkup;
   /** Content of the message to be sent instead of the photo */
@@ -152,7 +153,7 @@ export interface InlineQueryResultGif {
   /** List of special entities that appear in the caption, which can be specified instead of parse_mode */
   caption_entities?: MessageEntity[];
   /** Pass True, if the caption must be shown above the message media */
-  show_caption_above_media?: true;
+  show_caption_above_media?: boolean;
   /** Inline keyboard attached to the message */
   reply_markup?: InlineKeyboardMarkup;
   /** Content of the message to be sent instead of the GIF animation */
@@ -186,7 +187,7 @@ export interface InlineQueryResultMpeg4Gif {
   /** List of special entities that appear in the caption, which can be specified instead of parse_mode */
   caption_entities?: MessageEntity[];
   /** Pass True, if the caption must be shown above the message media */
-  show_caption_above_media?: true;
+  show_caption_above_media?: boolean;
   /** Inline keyboard attached to the message */
   reply_markup?: InlineKeyboardMarkup;
   /** Content of the message to be sent instead of the video animation */
@@ -216,7 +217,7 @@ export interface InlineQueryResultVideo {
   /** List of special entities that appear in the caption, which can be specified instead of parse_mode */
   caption_entities?: MessageEntity[];
   /** Pass True, if the caption must be shown above the message media */
-  show_caption_above_media?: true;
+  show_caption_above_media?: boolean;
   /** Video width */
   video_width?: number;
   /** Video height */
@@ -436,7 +437,7 @@ export interface InlineQueryResultCachedPhoto {
   /** List of special entities that appear in the caption, which can be specified instead of parse_mode */
   caption_entities?: MessageEntity[];
   /** Pass True, if the caption must be shown above the message media */
-  show_caption_above_media?: true;
+  show_caption_above_media?: boolean;
   /** Inline keyboard attached to the message */
   reply_markup?: InlineKeyboardMarkup;
   /** Content of the message to be sent instead of the photo */
@@ -460,7 +461,7 @@ export interface InlineQueryResultCachedGif {
   /** List of special entities that appear in the caption, which can be specified instead of parse_mode */
   caption_entities?: MessageEntity[];
   /** Pass True, if the caption must be shown above the message media */
-  show_caption_above_media?: true;
+  show_caption_above_media?: boolean;
   /** Inline keyboard attached to the message */
   reply_markup?: InlineKeyboardMarkup;
   /** Content of the message to be sent instead of the GIF animation */
@@ -484,7 +485,7 @@ export interface InlineQueryResultCachedMpeg4Gif {
   /** List of special entities that appear in the caption, which can be specified instead of parse_mode */
   caption_entities?: MessageEntity[];
   /** Pass True, if the caption must be shown above the message media */
-  show_caption_above_media?: true;
+  show_caption_above_media?: boolean;
   /** Inline keyboard attached to the message */
   reply_markup?: InlineKeyboardMarkup;
   /** Content of the message to be sent instead of the video animation */
@@ -548,7 +549,7 @@ export interface InlineQueryResultCachedVideo {
   /** List of special entities that appear in the caption, which can be specified instead of parse_mode */
   caption_entities?: MessageEntity[];
   /** Pass True, if the caption must be shown above the message media */
-  show_caption_above_media?: true;
+  show_caption_above_media?: boolean;
   /** Inline keyboard attached to the message */
   reply_markup?: InlineKeyboardMarkup;
   /** Content of the message to be sent instead of the video */
@@ -597,19 +598,27 @@ export interface InlineQueryResultCachedAudio {
   input_message_content?: InputMessageContent;
 }
 
-/** This object represents the content of a message to be sent as a result of an inline query. Telegram clients currently support the following 5 types:
+/** This object represents the content of a message to be sent as a result of an inline query. Telegram clients currently support the following 6 types:
 
 - InputTextMessageContent
+- InputRichMessageContent
 - InputLocationMessageContent
 - InputVenueMessageContent
 - InputContactMessageContent
 - InputInvoiceMessageContent */
 export type InputMessageContent =
   | InputTextMessageContent
+  | InputRichMessageContent
   | InputLocationMessageContent
   | InputVenueMessageContent
   | InputContactMessageContent
   | InputInvoiceMessageContent;
+
+/** Represents the content of a rich message to be sent as the result of an inline query. */
+export interface InputRichMessageContent {
+  /** The message to be sent. Only previously uploaded files may be used in the message. */
+  rich_message: InputRichMessage<never>;
+}
 
 /** Represents the content of a text message to be sent as the result of an inline query. */
 export interface InputTextMessageContent {

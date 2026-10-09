@@ -1,7 +1,7 @@
 {
   "name": "@telegraf-hardened/types",
   "private": false,
-  "version": "10.3.0",
+  "version": "10.3.1",
   "description": "Type declarations for the Telegram API",
   "main": "index.js",
   "repository": {
@@ -17,7 +17,9 @@
     "typings"
   ],
   "scripts": {
-    "prepare": "deno task backport"
+    "prepare": "deno task backport",
+    "pretest": "npm run prepare",
+    "test": "node --test test/types.cjs"
   },
   "author": "Telegraf contributors",
   "types": "index.d.ts",
@@ -31,6 +33,7 @@
     "index.js"
   ],
   "devDependencies": {
-    "deno-bin": "^2.2.7"
+    "deno": "2.2.7",
+    "typescript": "5.9.3"
   }
 }

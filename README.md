@@ -10,6 +10,8 @@ hardened changes:
 
 - Bot API 10.3 coverage aligned with the upstream Telegraf type sync
 - keeps the hardened package name and release channel
+- `InputRichBlockThinking` is only accepted by `sendRichMessageDraft`: `InputRichBlock<F>` and `InputRichMessage<F>` no longer include it, so type draft content as `InputRichBlockDraft<F>` / `InputRichMessageDraft<F>` instead
+- `PollMedia` rejects objects with more than one media field; narrow it with a field check such as `media.photo !== undefined` (an `"photo" in media` check does not narrow the field type)
 
 ## Installation
 
@@ -110,6 +112,11 @@ They can simply continue to be imported directly.
 ## Development
 
 This project is written for Deno and built for Node. Running `npm prepare` runs the deno2node script to build for Node.
+
+Run `npm ci` and `npm test` to rebuild declarations and type-check the positive
+and negative contract examples in `test/contracts.ts`. The same examples run
+against both the TypeScript sources and an isolated copy of the generated
+declarations, so source files cannot hide a declaration-generation regression.
 
 ## Where do the types come from
 

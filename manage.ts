@@ -10,7 +10,7 @@ import type {
 /** Describes the current status of a webhook. */
 export interface WebhookInfo {
   /** Webhook URL, may be empty if webhook is not set up */
-  url?: string;
+  url: string;
   /** True, if a custom certificate was provided for webhook certificate checks */
   has_custom_certificate: boolean;
   /** Number of updates awaiting delivery */
@@ -158,7 +158,7 @@ declare namespace ChatFullInfo {
     /** For private chats with business accounts, the opening hours of the business */
     business_opening_hours?: BusinessOpeningHours;
     /** For private chats, the personal channel of the user */
-    personal_chat?: ChatFullInfo.ChannelChat;
+    personal_chat?: Chat.ChannelChat;
     /** For private chats, the rating of the user if any */
     rating?: UserRating;
     /** For private chats, the first audio added to the profile of the user */
@@ -186,7 +186,7 @@ declare namespace ChatFullInfo {
     /** The most recent pinned message (by sending date) */
     pinned_message?: Message;
     /** Information about types of gifts that are accepted by the chat or by the corresponding user for private chats */
-    accepted_gift_types?: AcceptedGiftTypes[];
+    accepted_gift_types: AcceptedGiftTypes;
     /** The number of Telegram Stars a general user has to pay to send a message to the chat */
     paid_message_star_count?: number;
     /** The time after which all messages sent to the chat will be automatically deleted; in seconds */
@@ -227,7 +227,7 @@ declare namespace ChatFullInfo {
     /** Default chat member permissions, for groups and supergroups */
     permissions?: ChatPermissions;
     /** Information about types of gifts that are accepted by the chat or by the corresponding user for private chats */
-    accepted_gift_types?: AcceptedGiftTypes[];
+    accepted_gift_types: AcceptedGiftTypes;
     /** The number of Telegram Stars a general user has to pay to send a message to the chat */
     paid_message_star_count?: number;
     /** The time after which all messages sent to the chat will be automatically deleted; in seconds */
@@ -276,7 +276,7 @@ declare namespace ChatFullInfo {
     /** Default chat member permissions, for groups and supergroups */
     permissions?: ChatPermissions;
     /** Information about types of gifts that are accepted by the chat or by the corresponding user for private chats */
-    accepted_gift_types?: AcceptedGiftTypes[];
+    accepted_gift_types: AcceptedGiftTypes;
     /** The number of Telegram Stars a general user has to pay to send a message to the chat */
     paid_message_star_count?: number;
     /** True, if paid media messages can be sent or forwarded to the channel chat. The field is available only for channel chats. */
@@ -337,7 +337,7 @@ declare namespace ChatFullInfo {
     /** The most recent pinned message (by sending date) */
     pinned_message?: Message;
     /** Information about types of gifts that are accepted by the chat or by the corresponding user for private chats */
-    accepted_gift_types?: AcceptedGiftTypes[];
+    accepted_gift_types: AcceptedGiftTypes;
     /** The number of Telegram Stars a general user has to pay to send a message to the chat */
     paid_message_star_count?: number;
     /** True, if paid media messages can be sent or forwarded to the channel chat. The field is available only for channel chats. */
@@ -400,8 +400,8 @@ export interface EphemeralMessageParameters {
 export interface DirectMessagesTopic {
   /** Unique identifier of the topic */
   topic_id: number;
-  /** Information about the user that created the topic. Currently, it is always present */
-  user: User;
+  /** Information about the user that created the topic. Currently, it is always present. */
+  user?: User;
 }
 
 /** This object represent a user's profile pictures. */
@@ -483,19 +483,19 @@ export interface ChatAdministratorRights {
   /** True, if the administrator can delete stories posted by other users */
   can_delete_stories: boolean;
   /** True, if the administrator can post messages in the channel, approve suggested posts, or access channel statistics; for channels only */
-  can_post_messages: boolean;
+  can_post_messages?: boolean;
   /** True, if the administrator can edit messages of other users and can pin messages; for channels only */
-  can_edit_messages: boolean;
+  can_edit_messages?: boolean;
   /** True, if the user is allowed to pin messages; for groups and supergroups only */
-  can_pin_messages: boolean;
+  can_pin_messages?: boolean;
   /** True, if the user is allowed to create, rename, close, and reopen forum topics; for supergroups only */
-  can_manage_topics: boolean;
+  can_manage_topics?: boolean;
   /** True, if the administrator can edit the tags of regular members; for groups and supergroups only */
   can_manage_tags?: boolean;
   /** True, if the administrator can manage direct messages of the channel and decline suggested posts; for channels only */
-  can_manage_direct_messages: boolean;
-  /** True, if the administrator can send welcome messages to new members of the chat; for private chats of managed bots only */
-  can_send_welcome_messages?: boolean;
+  can_manage_direct_messages?: boolean;
+  /** True, if the administrator can manage chat welcome messages or directly send them in the case of bots */
+  can_send_welcome_messages: boolean;
 }
 
 /** This object contains information about one member of a chat. Currently, the following 6 types of chat members are supported:
@@ -557,19 +557,19 @@ export interface ChatMemberAdministrator extends AbstractChatMember {
   /** True, if the administrator can delete stories posted by other users */
   can_delete_stories: boolean;
   /** True, if the administrator can post messages in the channel, approve suggested posts, or access channel statistics; for channels only */
-  can_post_messages: boolean;
+  can_post_messages?: boolean;
   /** True, if the administrator can edit messages of other users and can pin messages; for channels only */
-  can_edit_messages: boolean;
+  can_edit_messages?: boolean;
   /** True, if the user is allowed to pin messages; for groups and supergroups only */
-  can_pin_messages: boolean;
+  can_pin_messages?: boolean;
   /** True, if the user is allowed to create, rename, close, and reopen forum topics; for supergroups only */
-  can_manage_topics: boolean;
+  can_manage_topics?: boolean;
   /** True, if the administrator can edit the tags of regular members; for groups and supergroups only */
   can_manage_tags?: boolean;
   /** True, if the administrator can manage direct messages of the channel and decline suggested posts; for channels only */
-  can_manage_direct_messages: boolean;
-  /** True, if the administrator can send welcome messages to new members of the chat; for private chats of managed bots only */
-  can_send_welcome_messages?: boolean;
+  can_manage_direct_messages?: boolean;
+  /** True, if the administrator can manage chat welcome messages or directly send them in the case of bots */
+  can_send_welcome_messages: boolean;
   /** Custom title for this user */
   custom_title?: string;
 }
@@ -726,41 +726,34 @@ export interface ManagedBotUpdated {
   bot: User;
 }
 
-/** Describes the access settings granted by a managed bot to the bot that manages it. */
+/** This object describes the access settings of a bot. */
 export interface BotAccessSettings {
-  /** True, if the managing bot is allowed to send messages on behalf of the managed bot without the managed bot's account being Premium */
-  can_manage_without_premium?: boolean;
-  /** True, if the managed bot is allowed to receive and send messages to and from other opted-in bots */
-  allow_bot_to_bot_messages?: boolean;
+  /** True, if only selected users can access the bot. The bot's owner can always access it. */
+  is_access_restricted: boolean;
+  /** The list of other users who have access to the bot if the access is restricted */
+  added_users?: User[];
 }
 
-/** This object represents a community: a group of related chats that can be joined and managed together. */
+/** Represents a community (a group of chats). */
 export interface Community {
-  /** Unique identifier of the community */
-  id: string;
-  /** Title of the community */
-  title: string;
-  /** Community photo */
-  photo?: ChatPhoto;
-  /** Invite link of the community */
-  invite_link?: string;
+  /** Unique identifier for this community. This number may have more than 32 significant bits and some programming languages may have difficulty/silent defects in interpreting it. But it has at most 52 significant bits, so a signed 64-bit integer or double-precision float type are safe for storing this identifier. */
+  id: number;
+  /** Name of the community */
+  name: string;
 }
 
-/** Describes a service message about a chat added to a community. */
+/** Describes a service message about a chat or a bot being added to a community. */
 export interface CommunityChatAdded {
-  /** The community the chat was added to */
+  /** The new community to which the chat or the bot belongs */
   community: Community;
 }
 
-/** Describes a service message about a chat removed from a community. */
-export interface CommunityChatRemoved {
-  /** The community the chat was removed from */
-  community: Community;
-}
+/** Describes a service message about a chat or a bot being removed from a community. Currently holds no information. */
+export interface CommunityChatRemoved {}
 
-/** Describes a service message about a user joining a chat through a community. */
+/** Describes a service message about a chat being joined by a user from a community. */
 export interface CommunityChatJoined {
-  /** The community through which the chat was joined */
+  /** The community from which the chat was joined */
   community: Community;
 }
 
@@ -986,7 +979,7 @@ export interface BusinessBotRights {
   /** True, if the bot can mark incoming private messages as read */
   can_read_messages?: true;
   /** True, if the bot can delete messages sent by the bot */
-  can_delete_outgoing_messages?: true;
+  can_delete_sent_messages?: true;
   /** True, if the bot can delete all private messages in managed chats */
   can_delete_all_messages?: true;
   /** True, if the bot can edit the first and last name of the business account */
@@ -1086,6 +1079,8 @@ export interface BotCommand {
   command: string;
   /** Description of the command; 1-256 characters. */
   description: string;
+  /** True, if the command sends an ephemeral message, which can be seen only by the sender of the message and the bot */
+  is_ephemeral?: boolean;
 }
 
 /** This object describes the source of a chat boost. It can be one of
@@ -1094,7 +1089,7 @@ export interface BotCommand {
 - ChatBoostSourceGiftCode
 - ChatBoostSourceGiveaway
 */
-type ChatBoostSource =
+export type ChatBoostSource =
   | ChatBoostSourcePremium
   | ChatBoostSourceGiftCode
   | ChatBoostSourceGiveaway;
@@ -1191,8 +1186,6 @@ export interface BusinessConnection {
   user_chat_id: number;
   /** Date the connection was established in Unix time */
   date: number;
-  /** True, if the bot can act on behalf of the business account in chats that were active in the last 24 hours */
-  can_reply: boolean;
   /** True, if the connection is active */
   is_enabled: boolean;
 }

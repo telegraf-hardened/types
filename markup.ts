@@ -1,5 +1,5 @@
 import type { ChatAdministratorRights, User } from "./manage.ts";
-import type { MaybeInaccessibleMessage } from "./message.ts";
+import type { MaybeInaccessibleMessage, RichText } from "./message.ts";
 
 /** This object represents an inline keyboard that appears right next to the message it belongs to. */
 export interface InlineKeyboardMarkup {
@@ -17,8 +17,6 @@ export declare namespace InlineKeyboardButton {
     icon_custom_emoji_id?: string;
     /** Style of the button. Must be one of “danger” (red), “success” (green) or “primary” (blue). If omitted, then an app-specific style is used. */
     style?: "danger" | "success" | "primary";
-    /** True, if the button must be shown in a disabled, non-interactive state */
-    disabled?: boolean;
   }
   export interface UrlButton extends AbstractInlineKeyboardButton {
     /** HTTP or tg:// URL to be opened when the button is pressed. Links tg://user?id=<user_id> can be used to mention a user by their identifier without using a username, if this is allowed by their privacy settings. */
@@ -52,9 +50,9 @@ export declare namespace InlineKeyboardButton {
     /** If set, pressing the button will prompt the user to select one of their chats of the specified type, open that chat and insert the bot's username and the specified inline query in the input field. Not supported for messages sent in channel direct messages chats and on behalf of a Telegram Business account. */
     switch_inline_query_chosen_chat: SwitchInlineQueryChosenChat;
   }
-  export interface CopyTextButton extends AbstractInlineKeyboardButton {
-    /** Description of the button that copies the specified text to the clipboard. */
-    copy_text: CopyTextButton;
+  export interface CopyButton extends AbstractInlineKeyboardButton {
+    /** Description of the button that copies the specified text to the clipboard */
+    copy_text: CopyTextButtonInfo;
   }
   export interface GameButton extends AbstractInlineKeyboardButton {
     /** Description of the game that will be launched when the user presses the button.
@@ -63,12 +61,20 @@ export declare namespace InlineKeyboardButton {
     callback_game: CallbackGame;
   }
   export interface PayButton extends AbstractInlineKeyboardButton {
-    /** Specify True, to send a Pay button.
+    /** Specify True, to send a Pay button. Substrings “⭐” and “XTR” in the buttons's text will be replaced with a Telegram Star icon.
 
     NOTE: This type of button must always be the first button in the first row and can only be used in invoice messages. */
     pay: boolean;
   }
+  export interface DisabledStateButton extends AbstractInlineKeyboardButton {
+    /** If set, then the button is disabled and does nothing */
+    disabled: DisabledButtonInfo;
+  }
 }
+
+/** Aliases used inside the button namespaces, where the variant names would shadow the top-level objects */
+type CopyTextButtonInfo = CopyTextButton;
+type DisabledButtonInfo = DisabledButton;
 
 /** This object represents one button of an inline keyboard. Exactly one of the fields other than text, icon_custom_emoji_id, and style must be used to specify the type of the button. */
 export type InlineKeyboardButton =
@@ -80,7 +86,9 @@ export type InlineKeyboardButton =
   | InlineKeyboardButton.SwitchInlineCurrentChatButton
   | InlineKeyboardButton.SwitchInlineChosenChatButton
   | InlineKeyboardButton.UrlButton
-  | InlineKeyboardButton.WebAppButton;
+  | InlineKeyboardButton.WebAppButton
+  | InlineKeyboardButton.CopyButton
+  | InlineKeyboardButton.DisabledStateButton;
 
 /** This object represents a parameter of the inline keyboard button used to automatically authorize a user. Serves as a great replacement for the Telegram Login Widget when the user is coming from Telegram. All the user needs to do is tap/click a button and confirm that they want to log in.
 Telegram apps support these buttons as of version 5.7. */
@@ -117,45 +125,86 @@ export interface CopyTextButton {
   text: string;
 }
 
-/** This object represents a button that is shown in a disabled, non-interactive state. */
-export interface DisabledButton {
-  /** Label text on the button */
-  text: string;
-  /** Unique identifier of the custom emoji shown before the text of the button */
-  icon_custom_emoji_id?: string;
-  /** Style of the button. Must be one of “danger” (red), “success” (green) or “primary” (blue). If omitted, then an app-specific style is used. */
-  style?: "danger" | "success" | "primary";
+/** This object represents a disabled button which does nothing. Currently holds no information. */
+export type DisabledButton = Record<string, never>;
+
+/** Text of a RichMessageButton. Can be a String for plain text, an Array of such values, or one of
+- RichText.CustomEmoji
+- RichText.DateTime */
+export type RichMessageButtonText =
+  | string
+  | RichMessageButtonText[]
+  | RichText.CustomEmoji
+  | (Omit<RichText.DateTime, "text"> & { text: RichMessageButtonText });
+
+/** Describes a login URL for a button in a RichMessage. Same as LoginUrl, but the field bot_username isn't supported. */
+export interface RichMessageLoginUrl extends Omit<LoginUrl, "bot_username"> {
+  /** Not supported for buttons in rich messages */
+  bot_username?: never;
 }
 
 export declare namespace RichMessageButton {
   interface AbstractRichMessageButton {
-    /** Label text on the button */
-    text: string;
-    /** Unique identifier of the custom emoji shown before the text of the button */
-    icon_custom_emoji_id?: string;
-    /** Style of the button. Must be one of “danger” (red), “success” (green) or “primary” (blue). If omitted, then an app-specific style is used. */
+    /** Text of the button. May contain only plain text, RichTextCustomEmoji and RichTextDateTime entities. */
+    text: RichMessageButtonText;
+  }
+  interface StyledRichMessageButton extends AbstractRichMessageButton {
+    /** Style of the button. Must be one of “danger”, “success” or “primary”. Apps may use theme-specific colors for the button background and text based on the style. */
     style?: "danger" | "success" | "primary";
   }
-  export interface UrlButton extends AbstractRichMessageButton {
-    /** HTTP or tg:// URL to be opened when the button is pressed */
+  export interface UrlButton extends StyledRichMessageButton {
+    /** HTTP or tg:// URL to be opened when the button is pressed. Links tg://user?id=<user_id> can be used to mention a user by their identifier without using a username, if this is allowed by their privacy settings. */
     url: string;
   }
   export interface CallbackButton extends AbstractRichMessageButton {
+    /** Style of the button. Must be one of “danger”, “success”, “primary”, or “link” (the button is shown as a regular link without borders). Apps may use theme-specific colors for the button background and text based on the style. The style “link” is allowed only for callback buttons. */
+    style?: "danger" | "success" | "primary" | "link";
     /** Data to be sent in a callback query to the bot when the button is pressed, 1-64 bytes */
     callback_data: string;
   }
-  export interface WebAppButton extends AbstractRichMessageButton {
-    /** Description of the Web App that will be launched when the user presses the button */
+  export interface WebAppButton extends StyledRichMessageButton {
+    /** Description of the Web App that will be launched when the user presses the button. The Web App will be able to send an arbitrary message on behalf of the user using the method answerWebAppQuery. Available only in private chats between a user and the bot. Not supported for messages sent on behalf of a business account. */
     web_app: WebAppInfo;
+  }
+  export interface LoginButton extends StyledRichMessageButton {
+    /** An HTTPS URL used to automatically authorize the user. Can be used as a replacement for the Telegram Login Widget. The field bot_username isn't supported. Not supported for ephemeral messages. */
+    login_url: RichMessageLoginUrl;
+  }
+  export interface SwitchInlineButton extends StyledRichMessageButton {
+    /** If set, pressing the button will prompt the user to select one of their chats, open that chat and insert the bot's username and the specified inline query in the input field. May be empty, in which case just the bot's username will be inserted. Not supported for messages sent in channel direct messages chats and on behalf of a business account. */
+    switch_inline_query: string;
+  }
+  export interface SwitchInlineCurrentChatButton
+    extends StyledRichMessageButton {
+    /** If set, pressing the button will insert the bot's username and the specified inline query in the current chat's input field. May be empty, in which case only the bot's username will be inserted. Not supported in channels and for messages sent in channel direct messages chats and on behalf of a business account. */
+    switch_inline_query_current_chat: string;
+  }
+  export interface SwitchInlineChosenChatButton
+    extends StyledRichMessageButton {
+    /** If set, pressing the button will prompt the user to select one of their chats of the specified type, open that chat and insert the bot's username and the specified inline query in the input field. Not supported for messages sent in channel direct messages chats and on behalf of a business account. */
+    switch_inline_query_chosen_chat: SwitchInlineQueryChosenChat;
+  }
+  export interface CopyButton extends StyledRichMessageButton {
+    /** A button that copies the specified text to the clipboard */
+    copy_text: CopyTextButtonInfo;
+  }
+  export interface DisabledStateButton extends StyledRichMessageButton {
+    /** If set, then the button is disabled and does nothing */
+    disabled: DisabledButtonInfo;
   }
 }
 
-/** This object represents a button belonging to the buttons block of a rich message. Exactly one of the fields other than text, icon_custom_emoji_id, and style must be used to specify the type of the button. */
+/** This object represents a button in a RichMessage. Exactly one of the fields other than text and style must be used to specify the type of the button. */
 export type RichMessageButton =
   | RichMessageButton.UrlButton
   | RichMessageButton.CallbackButton
   | RichMessageButton.WebAppButton
-  | DisabledButton;
+  | RichMessageButton.LoginButton
+  | RichMessageButton.SwitchInlineButton
+  | RichMessageButton.SwitchInlineCurrentChatButton
+  | RichMessageButton.SwitchInlineChosenChatButton
+  | RichMessageButton.CopyButton
+  | RichMessageButton.DisabledStateButton;
 
 /** A placeholder, currently holds no information. Use BotFather to set up your game. */
 export interface CallbackGame {}
