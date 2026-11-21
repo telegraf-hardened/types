@@ -13,7 +13,11 @@ import type {
   MessageReactionUpdated,
   User,
 } from "./manage.ts";
-import type { CallbackQuery } from "./markup.ts";
+import type {
+  CallbackQuery,
+  SharedWidgetQuery,
+  WidgetQuery,
+} from "./markup.ts";
 import type {
   CommonMessageBundle,
   Message,
@@ -122,6 +126,14 @@ export declare namespace Update {
     /** New incoming callback query */
     callback_query: C;
   }
+  export interface WidgetQueryUpdate extends AbstractUpdate {
+    /** New incoming query from a widget in a message sent by the bot or via the bot */
+    widget_query: WidgetQuery;
+  }
+  export interface SharedWidgetQueryUpdate extends AbstractUpdate {
+    /** New incoming query from a forwarded message with a shared widget */
+    shared_widget_query: SharedWidgetQuery;
+  }
   export interface ShippingQueryUpdate extends AbstractUpdate {
     /** New incoming shipping query. Only for invoices with flexible price */
     shipping_query: ShippingQuery;
@@ -210,4 +222,6 @@ export type Update =
   | Update.GuestQueryUpdate
   | Update.BotSubscriptionUpdate
   | Update.StoppedMessageGenerationUpdate
-  | Update.PurchasedPaidMediaUpdate;
+  | Update.PurchasedPaidMediaUpdate
+  | Update.WidgetQueryUpdate
+  | Update.SharedWidgetQueryUpdate;

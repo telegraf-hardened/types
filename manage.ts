@@ -193,6 +193,10 @@ declare namespace ChatFullInfo {
     message_auto_delete_time?: number;
     /** True, if messages from the chat can't be forwarded to other chats */
     has_protected_content?: true;
+    /** For private chats, the TON wallet card of the user, which is shown on their profile page */
+    ton_wallet_card?: TonWalletCard;
+    /** For private chats, supergroups and channels, the theme of the screen for sharing a link to the user or the chat; omitted if the default theme is used */
+    share_theme?: ChatShareTheme;
   }
   /** Internal type representing group chats returned from `getChat`. */
   export interface GroupChat extends Chat.GroupChat {
@@ -309,6 +313,8 @@ declare namespace ChatFullInfo {
     guard_bot?: User;
     /** Information about the community the chat belongs to, if any */
     community?: Community;
+    /** For private chats, supergroups and channels, the theme of the screen for sharing a link to the user or the chat; omitted if the default theme is used */
+    share_theme?: ChatShareTheme;
   }
   /** Internal type representing channel chats returned from `getChat`. */
   export interface ChannelChat extends Chat.ChannelChat {
@@ -350,6 +356,8 @@ declare namespace ChatFullInfo {
     linked_chat_id?: number;
     /** Information about the community the chat belongs to, if any */
     community?: Community;
+    /** For private chats, supergroups and channels, the theme of the screen for sharing a link to the user or the chat; omitted if the default theme is used */
+    share_theme?: ChatShareTheme;
   }
 }
 
@@ -388,9 +396,9 @@ export interface SuggestedPostParameters {
 
 /** Contains parameters of an ephemeral message that is shown only to a single user. */
 export interface EphemeralMessageParameters {
-  /** Unique identifier of the user to whom the ephemeral message must be shown */
-  receiver_user_id: number;
-  /** Unique identifier of the callback query in response to which the ephemeral message is sent, if any */
+  /** Unique identifier of the user to whom the ephemeral message must be shown; required unless the message is sent as an ephemeral reply to a callback query. If omitted, then the parameter chat_id of the method is ignored. If specified together with callback_query_id, then it must be the identifier of the user who pressed the button. */
+  receiver_user_id?: number;
+  /** Unique identifier of the callback query in response to which the ephemeral message is sent, if any. If specified and receiver_user_id is omitted, then the message is sent as an ephemeral reply to the callback query and will be shown only to the user who pressed the button. Ephemeral replies can't be sent to callback queries from messages in channel direct messages chats. */
   callback_query_id?: string;
   /** Pass True to replace the message that contained the callback button which triggered the ephemeral message */
   replace_callback_query_message?: boolean;
@@ -823,21 +831,24 @@ export interface UserRating {
   next_level_rating?: number;
 }
 
-/** Describes the position of a clickable area within a story. */
-export interface StoryAreaPosition {
-  /** The abscissa of the area's center, as a percentage of the media width */
+/** Describes the position of a rectangle area on a story media or a TON wallet card. */
+export interface AreaPosition {
+  /** The abscissa of the area's center, as a percentage of the media or the card width */
   x_percentage: number;
-  /** The ordinate of the area's center, as a percentage of the media height */
+  /** The ordinate of the area's center, as a percentage of the media or the card height */
   y_percentage: number;
-  /** The width of the area's rectangle, as a percentage of the media width */
+  /** The width of the area's rectangle, as a percentage of the media or the card width */
   width_percentage: number;
-  /** The height of the area's rectangle, as a percentage of the media height */
+  /** The height of the area's rectangle, as a percentage of the media or the card height */
   height_percentage: number;
   /** The clockwise rotation angle of the rectangle, in degrees; 0-360 */
   rotation_angle: number;
-  /** The radius of the rectangle corner rounding, as a percentage of the media width */
+  /** The radius of the rectangle corner rounding, as a percentage of the media or the card width */
   corner_radius_percentage: number;
 }
+
+/** @deprecated Renamed to `AreaPosition` in Bot API 10.4. */
+export type StoryAreaPosition = AreaPosition;
 
 /** Describes the physical address of a location. */
 export interface LocationAddress {
@@ -914,7 +925,7 @@ export interface StoryAreaTypeUniqueGift {
 /** Describes a clickable area on a story media. */
 export interface StoryArea {
   /** Position of the area */
-  position: StoryAreaPosition;
+  position: AreaPosition;
   /** Type of the area */
   type: StoryAreaType;
 }
@@ -1440,4 +1451,110 @@ export interface StarAmount {
   amount: number;
   /** Optional. The number of 1/1000000000 shares of Telegram Stars; from -999999999 to 999999999; can be negative if and only if amount is non-positive */
   nanostar_amount?: number;
+}
+
+/** This object describes a TON wallet card, which is shown on the profile page of a user to everyone. */
+export interface TonWalletCard {
+  /** Address of the wallet */
+  address: string;
+  /** Balance of the wallet, in the smallest units of the cryptocurrency, as a decimal number */
+  amount: string;
+  /** Stickers placed on the card */
+  stickers: TonWalletCardSticker[];
+  /** Address of the NFT of one of the stickers, whose colors must be used for the card background; omitted if the default background must be used */
+  background_nft_address?: string;
+}
+
+/** This object describes a sticker on a TON wallet card. */
+export interface TonWalletCardSticker {
+  /** Position of the sticker on the card */
+  position: AreaPosition;
+  /** The NFT shown as the sticker */
+  nft: TonNft;
+}
+
+/** This object represents an NFT in the TON blockchain. */
+export interface TonNft {
+  /** Address of the NFT */
+  address: string;
+  /** Address of the collection to which the NFT belongs; omitted if unknown */
+  collection_address?: string;
+  /** Index of the NFT among all NFTs from the collection as a decimal number */
+  index: string;
+  /** Name of the NFT */
+  name: string;
+  /** Description of the NFT */
+  description: string;
+  /** Attributes of the NFT */
+  attributes?: TonNftAttribute[];
+  /** The unique gift corresponding to the NFT */
+  gift?: UniqueGift;
+}
+
+/** This object represents an attribute of an NFT in the TON blockchain. */
+export interface TonNftAttribute {
+  /** Trait type of the attribute */
+  trait_type: string;
+  /** Value of the attribute */
+  value: string;
+}
+
+/** A regular emoji. */
+export interface EmojiTypeEmoji {
+  /** Type of the emoji, always “emoji” */
+  type: "emoji";
+  /** The emoji */
+  emoji: string;
+}
+
+/** A custom emoji. */
+export interface EmojiTypeCustomEmoji {
+  /** Type of the emoji, always “custom_emoji” */
+  type: "custom_emoji";
+  /** Identifier of the custom emoji. Use getCustomEmojiStickers to get full information about the sticker. */
+  custom_emoji_id: string;
+}
+
+/** This object describes an emoji. Currently, it can be one of
+- EmojiTypeEmoji
+- EmojiTypeCustomEmoji */
+export type EmojiType = EmojiTypeEmoji | EmojiTypeCustomEmoji;
+
+/** The theme with emoji placed on a background. */
+export interface ChatShareThemeEmoji {
+  /** Type of the theme, always “emoji” */
+  type: "emoji";
+  /** The emoji; 0-6 regular or custom emoji */
+  emojis: EmojiType[];
+  /** Identifier of the backdrop used as the background; omitted if the default background is used. Use getChatShareThemeBackdrops to get details about the backdrop. */
+  background_backdrop_id?: number;
+}
+
+/** The theme based on a unique gift owned by the user or the chat. */
+export interface ChatShareThemeUniqueGift {
+  /** Type of the theme, always “unique_gift” */
+  type: "unique_gift";
+  /** The gift */
+  gift: UniqueGift;
+}
+
+/** This object describes the theme of the screen for sharing a link to a user or a chat. Currently, it can be one of
+- ChatShareThemeEmoji
+- ChatShareThemeUniqueGift */
+export type ChatShareTheme = ChatShareThemeEmoji | ChatShareThemeUniqueGift;
+
+/** This object describes a backdrop, which can be used as the background of a theme of the screen for sharing a link to a user or a chat. */
+export interface ChatShareThemeBackdrop {
+  /** Unique identifier of the backdrop */
+  id: number;
+  /** Name of the backdrop */
+  name: string;
+  /** Colors of the backdrop */
+  colors: UniqueGiftBackdropColors;
+}
+
+/** This object contains a list of backdrops, which can be used as the background of a theme of the screen for sharing a link to a user or a chat. */
+export interface ChatShareThemeBackdrops {
+  /** The list of backdrops */
+  backdrops: ChatShareThemeBackdrop[];
 }
