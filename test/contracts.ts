@@ -4,6 +4,7 @@ import type {
   Audio,
   Chat,
   ChatFullInfo,
+  ChatShareTheme,
   Document,
   InputMediaLivePhoto,
   InputMediaPhoto,
@@ -13,17 +14,24 @@ import type {
   InputRichBlockDraft,
   InputRichMessage,
   InputRichMessageContent,
+  InputSharedWidgetMessageContent,
+  InputWidgetMessageContent,
   Link,
   LivePhoto,
   Location,
+  Message,
+  MessageEntity,
   PhotoSize,
   PollMedia,
   RichMessageButton,
   RichMessageButtonText,
   RichText,
   Sticker,
+  TonWalletCard,
+  Update,
   Venue,
   Video,
+  WidgetQueryType,
 } from "../index";
 
 type PersonalChat = Extract<ChatFullInfo, { type: "private" }>["personal_chat"];
@@ -245,3 +253,91 @@ api.sendDocument({ chat_id: 1, document: upload });
 // @ts-expect-error Inline rich content can only reference already uploaded files.
 const inlineUpload: InputRichMessageContent = { rich_message: richUpload };
 void inlineUpload;
+
+// Bot API 10.4: ephemeral replies to callback queries need neither chat_id nor
+// receiver_user_id; the callback query identifies the receiver.
+api.sendMessage({
+  text: "Only you can see this",
+  ephemeral_message_parameters: { callback_query_id: "1" },
+});
+api.sendPhoto({
+  photo: "file_id",
+  ephemeral_message_parameters: {
+    callback_query_id: "1",
+    replace_callback_query_message: true,
+  },
+});
+// @ts-expect-error Only ephemeral-capable send methods have an optional chat_id.
+api.sendDice({ emoji: "🎲" });
+
+// Bot API 10.4: widgets.
+api.sendWidget({ chat_id: 1, html: "<b>Hi</b>", allow_queries: true });
+api.sendSharedWidget({ chat_id: 1, widget_id: "w" });
+// @ts-expect-error sendWidget requires the widget HTML.
+api.sendWidget({ chat_id: 1 });
+api.answerWidgetQuery({ widget_query_id: "q", data: "ok" });
+api.editMessageWidgetData({ inline_message_id: "i", public_data: "" });
+api.editSharedWidgetData({ widget_id: "w", public_data: "{}", cache_time: 5 });
+declare const widgetMessage: Message;
+if ("widget" in widgetMessage) {
+  const html: string = widgetMessage.widget.html;
+  void html;
+}
+const widgetContent: InputWidgetMessageContent = { html: "<p></p>" };
+const sharedWidgetContent: InputSharedWidgetMessageContent = {
+  widget_id: "w",
+};
+void widgetContent;
+void sharedWidgetContent;
+declare const update: Update;
+if ("widget_query" in update) {
+  const queryType: WidgetQueryType = update.widget_query.type;
+  if (queryType.type === "sign_data") {
+    const address: string = queryType.wallet.address;
+    void address;
+  }
+}
+if ("shared_widget_query" in update) {
+  const widgetId: string = update.shared_widget_query.widget_id;
+  void widgetId;
+}
+
+// Bot API 10.4: TON wallet cards, share themes and new entities.
+type PrivateChatFullInfo = Extract<ChatFullInfo, { type: "private" }>;
+declare const privateInfo: PrivateChatFullInfo;
+const walletCard: TonWalletCard | undefined = privateInfo.ton_wallet_card;
+const shareTheme: ChatShareTheme | undefined = privateInfo.share_theme;
+if (shareTheme?.type === "emoji") {
+  const firstEmoji = shareTheme.emojis[0];
+  if (firstEmoji?.type === "custom_emoji") void firstEmoji.custom_emoji_id;
+}
+void walletCard;
+const tonEntity: MessageEntity = { type: "ton_address", offset: 0, length: 4 };
+const cardEntity: MessageEntity = {
+  type: "bank_card_number",
+  offset: 0,
+  length: 16,
+};
+const tonRichText: RichText = {
+  type: "ton_address",
+  text: "EQ..",
+  address: "EQ",
+};
+void tonEntity;
+void cardEntity;
+void tonRichText;
+api.sendMessage({
+  chat_id: 1,
+  text: "Reply",
+  reply_parameters: { message_id: 1, quote_rich_texts: ["quoted"] },
+});
+api.verifyUser({
+  user_id: 1,
+  custom_description: "Verified",
+  custom_description_parse_mode: "HTML",
+});
+api.getUniqueGift({ name: "PlushPepe-1" });
+api.deleteBusinessAccountGift({
+  business_connection_id: "b",
+  owned_gift_id: "g",
+});

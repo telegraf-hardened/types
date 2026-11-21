@@ -1,5 +1,44 @@
 # Changelog
 
+## 10.4.0 (unreleased)
+
+Adds the typings for [Bot API 10.4](https://core.telegram.org/bots/api-changelog#november-9-2026).
+
+### Added
+
+- Widgets: `Widget`, `Message.WidgetMessage` (`widget` on `Message`) and
+  `ExternalReplyWidget`; methods `sendWidget`, `sendSharedWidget`,
+  `answerWidgetQuery`, `editMessageWidgetData` and `editSharedWidgetData`;
+  updates `widget_query` and `shared_widget_query` with `WidgetQuery`,
+  `SharedWidgetQuery`, `WidgetQueryType` (`WidgetQueryTypeData`,
+  `WidgetQueryTypeSignData`, `WidgetQueryTypeSentTransaction`) and
+  `WidgetQueryWallet`; inline contents `InputWidgetMessageContent` and
+  `InputSharedWidgetMessageContent`.
+- TON wallet: `TonWalletCard`, `TonWalletCardSticker`, `TonNft`,
+  `TonNftAttribute` and `ChatFullInfo.ton_wallet_card`; `TonWalletTransfer`
+  service messages (`Message.TonWalletTransferMessage`).
+- Chat share themes: `ChatShareTheme` (`ChatShareThemeEmoji`,
+  `ChatShareThemeUniqueGift`) and `ChatFullInfo.share_theme`; `EmojiType`
+  (`EmojiTypeEmoji`, `EmojiTypeCustomEmoji`); `ChatShareThemeBackdrop`,
+  `ChatShareThemeBackdrops` and `getChatShareThemeBackdrops`.
+- Gifts: `getUniqueGift` and `deleteBusinessAccountGift`.
+- Quotes from rich messages: `TextQuote.rich_texts` and
+  `ReplyParameters.quote_rich_texts`.
+- `MessageEntity.BankCardNumber` and `MessageEntity.TonAddress`,
+  `RichText.TonAddress`.
+- `PaidMessagesWaived` service messages (`Message.PaidMessagesWaivedMessage`).
+- `custom_description_parse_mode` and `custom_description_entities` on
+  `verifyUser` and `verifyChat`.
+
+### Changed
+
+- Ephemeral replies to callback queries: `chat_id` is optional on the 14
+  ephemeral-capable send methods, and
+  `EphemeralMessageParameters.receiver_user_id` is optional. Code that reads
+  `receiver_user_id` must now handle `undefined`.
+- `StoryAreaPosition` was renamed to `AreaPosition`. `StoryAreaPosition` stays
+  as a deprecated alias.
+
 ## 10.3.1 (unreleased)
 
 Aligns the 10.3.0 typings with the official Bot API 10.3 specification. Many

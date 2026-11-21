@@ -187,6 +187,12 @@ export declare namespace Message {
     /** Message is a voice message, information about the file */
     voice: Voice;
   }
+  export interface WidgetMessage extends CaptionableMessage {
+    /** Message is an HTML widget, information about the widget */
+    widget: Widget;
+    /** True, if the caption must be shown above the message media */
+    show_caption_above_media?: true;
+  }
   export interface ChecklistMessage extends CommonMessage {
     /** Message is a checklist */
     checklist: Checklist;
@@ -395,6 +401,10 @@ export declare namespace Message {
     /** Service message: a giveaway without public winners was completed */
     giveaway_completed: GiveawayCompleted;
   }
+  export interface PaidMessagesWaivedMessage extends ServiceMessage {
+    /** Service message: the sender of the message used a link of the other user, which allows sending messages to the user without paying Telegram Stars */
+    paid_messages_waived: PaidMessagesWaived;
+  }
   export interface PaidMessagePriceChangedMessage extends ServiceMessage {
     /** Service message: the price for paid messages has changed in the chat */
     paid_message_price_changed: PaidMessagePriceChanged;
@@ -418,6 +428,10 @@ export declare namespace Message {
   export interface SuggestedPostRefundedMessage extends ServiceMessage {
     /** Service message: payment for a suggested post was refunded */
     suggested_post_refunded: SuggestedPostRefunded;
+  }
+  export interface TonWalletTransferMessage extends ServiceMessage {
+    /** Service message: a transfer with a TON wallet */
+    ton_wallet_transfer: TonWalletTransfer;
   }
   export interface VideoChatScheduledMessage extends ServiceMessage {
     /** Service message: video chat scheduled */
@@ -518,11 +532,13 @@ export type ServiceMessageBundle =
   | Message.ChecklistTasksAddedMessage
   | Message.DirectMessagePriceChangedMessage
   | Message.PaidMessagePriceChangedMessage
+  | Message.PaidMessagesWaivedMessage
   | Message.SuggestedPostApprovedMessage
   | Message.SuggestedPostApprovalFailedMessage
   | Message.SuggestedPostDeclinedMessage
   | Message.SuggestedPostPaidMessage
-  | Message.SuggestedPostRefundedMessage;
+  | Message.SuggestedPostRefundedMessage
+  | Message.TonWalletTransferMessage;
 
 /** Helper type that bundles all possible `Message.CommonMessage`s. More specifically, bundles all messages that do have a `reply_to_message` field, i.e. are a `Message.CommonMessage`. */
 export type CommonMessageBundle =
@@ -545,7 +561,8 @@ export type CommonMessageBundle =
   | Message.VenueMessage
   | Message.VideoMessage
   | Message.VideoNoteMessage
-  | Message.VoiceMessage;
+  | Message.VoiceMessage
+  | Message.WidgetMessage;
 
 /** Helper type that represents a message which occurs in a `reply_to_message` field. */
 type ReplyMessage =
@@ -714,7 +731,7 @@ export type ParseMode = "Markdown" | "MarkdownV2" | "HTML";
 
 export declare namespace MessageEntity {
   interface Abstract {
-    /** Type of the entity. Currently, can be “mention” (@username), “hashtag” (#hashtag or #hashtag@chatusername), “cashtag” ($USD or $USD@chatusername), “bot_command” (/start@jobs_bot), “url” (https://telegram.org), “email” (do-not-reply@telegram.org), “phone_number” (+1-212-555-0123), “bold” (bold text), “italic” (italic text), “underline” (underlined text), “strikethrough” (strikethrough text), “spoiler” (spoiler message), “blockquote” (block quotation), “expandable_blockquote” (collapsed-by-default block quotation), “code” (monowidth string), “pre” (monowidth block), “text_link” (for clickable text URLs), “text_mention” (for users without usernames), “custom_emoji” (for inline custom emoji stickers), or “date_time” (for formatted date and time) */
+    /** Type of the entity. Currently, can be “mention” (@username), “hashtag” (#hashtag or #hashtag@chatusername), “cashtag” ($USD or $USD@chatusername), “bot_command” (/start@jobs_bot), “url” (https://telegram.org), “email” (do-not-reply@telegram.org), “phone_number” (+1-212-555-0123), “bank_card_number” (bank card number), “ton_address” (address in the TON blockchain), “bold” (bold text), “italic” (italic text), “underline” (underlined text), “strikethrough” (strikethrough text), “spoiler” (spoiler message), “blockquote” (block quotation), “expandable_blockquote” (collapsed-by-default block quotation), “code” (monowidth string), “pre” (monowidth block), “text_link” (for clickable text URLs), “text_mention” (for users without usernames), “custom_emoji” (for inline custom emoji stickers), or “date_time” (for formatted date and time) */
     type: string;
     /** Offset in UTF-16 code units to the start of the entity */
     offset: number;
@@ -748,6 +765,14 @@ export declare namespace MessageEntity {
 
   export interface PhoneNumber extends Abstract {
     type: "phone_number";
+  }
+
+  export interface BankCardNumber extends Abstract {
+    type: "bank_card_number";
+  }
+
+  export interface TonAddress extends Abstract {
+    type: "ton_address";
   }
 
   export interface Bold extends Abstract {
@@ -819,6 +844,8 @@ export type MessageEntity =
   | MessageEntity.Url
   | MessageEntity.Email
   | MessageEntity.PhoneNumber
+  | MessageEntity.BankCardNumber
+  | MessageEntity.TonAddress
   | MessageEntity.Bold
   | MessageEntity.Blockquote
   | MessageEntity.ExpandableBlockquote
@@ -839,6 +866,8 @@ export interface TextQuote {
   text: string;
   /** Special entities that appear in the quote. Currently, only bold, italic, underline, strikethrough, spoiler, custom_emoji, and date_time entities are kept in quotes. */
   entities?: MessageEntity[];
+  /** Rich text of the quote if it was chosen from a rich message. May contain only plain text, RichTextBold, RichTextItalic, RichTextUnderline, RichTextStrikethrough, RichTextSpoiler, RichTextSubscript, RichTextSuperscript, RichTextDateTime, RichTextCustomEmoji, RichTextMathematicalExpression, and arrays of them. */
+  rich_texts?: RichText[];
   /** Approximate quote position in the original message in UTF-16 code units as specified by the sender */
   position: number;
   /** True, if the quote was chosen manually by the message sender. Otherwise, the quote was added automatically by the server. */
@@ -967,6 +996,11 @@ export interface ExternalReplyLivePhoto
   live_photo: LivePhoto;
 }
 
+export interface ExternalReplyWidget extends AbstractExternalReply {
+  /** Message is an HTML widget, information about the widget */
+  widget: Widget;
+}
+
 export interface ExternalReplyChecklist extends AbstractExternalReply {
   /** Message is a checklist */
   checklist: Checklist;
@@ -994,7 +1028,8 @@ export type ExternalReplyInfo =
   | ExternalReplyLocation
   | ExternalReplyPoll
   | ExternalReplyVenue
-  | ExternalReplyLivePhoto;
+  | ExternalReplyLivePhoto
+  | ExternalReplyWidget;
 
 /** Describes reply parameters for the message that is being sent. At least one of message_id and ephemeral_message_id must be specified. */
 export type ReplyParameters =
@@ -1009,6 +1044,8 @@ export type ReplyParameters =
     quote_parse_mode?: ParseMode;
     /** A list of special entities that appear in the quote. It can be specified instead of quote_parse_mode. */
     quote_entities?: MessageEntity[];
+    /** A list of quoted parts of the rich message to be replied to. Must contain one element for each quoted text of the message in the order of their appearance. Up to 32 quoted texts with total length up to 1024 characters can be specified. Only plain text, RichTextBold, RichTextItalic, RichTextUnderline, RichTextStrikethrough, RichTextSpoiler, RichTextSubscript, RichTextSuperscript, RichTextDateTime, RichTextCustomEmoji, RichTextMathematicalExpression, and arrays of them are kept in the quote; other rich text types are replaced with their text. If non-empty, then quote, quote_parse_mode and quote_entities are ignored. */
+    quote_rich_texts?: RichText[];
     /** Position of the quote in the original message in UTF-16 code units */
     quote_position?: number;
     /** Identifier of the specific checklist task to be replied to */
@@ -1439,6 +1476,14 @@ export declare namespace RichText {
     /** The bank card number */
     bank_card_number: string;
   }
+  export interface TonAddress {
+    /** Type of the rich text, always “ton_address” */
+    type: "ton_address";
+    /** Text of the address */
+    text: RichText;
+    /** The address */
+    address: string;
+  }
   export interface Mention {
     /** Type of the rich text, always “mention” */
     type: "mention";
@@ -1527,6 +1572,7 @@ export declare namespace RichText {
 - RichText.EmailAddress
 - RichText.PhoneNumber
 - RichText.BankCardNumber
+- RichText.TonAddress
 - RichText.Mention
 - RichText.Hashtag
 - RichText.Cashtag
@@ -1556,6 +1602,7 @@ export type RichText =
   | RichText.EmailAddress
   | RichText.PhoneNumber
   | RichText.BankCardNumber
+  | RichText.TonAddress
   | RichText.Mention
   | RichText.Hashtag
   | RichText.Cashtag
@@ -2634,6 +2681,37 @@ export interface GiveawayWinners {
 export interface PaidMessagePriceChanged {
   /** The new number of Telegram Stars that must be paid by non-administrator users of the supergroup chat for each sent message */
   paid_message_star_count: number;
+}
+
+/** Describes a service message about the sender of the message using a link of the other user, which allows sending messages to the user without paying Telegram Stars. Currently holds no information. */
+export interface PaidMessagesWaived {}
+
+/** Describes a service message about a transfer with a TON wallet. */
+export interface TonWalletTransfer {
+  /** Unique identifier of the transaction; may be empty if the transfer hasn't been sent yet */
+  transaction_id: string;
+  /** Address of the transfer peer in the TON blockchain */
+  peer_address: string;
+  /** The amount of transferred cryptocurrency, in the smallest units of the cryptocurrency, as a decimal number; negative for outgoing transfers */
+  amount: string;
+  /** Comment added to the transfer; omitted if the comment is encrypted */
+  comment?: string;
+}
+
+/** This object describes an HTML widget. */
+export interface Widget {
+  /** Unique identifier of the shared widget, which can be used to send the widget again using the method sendSharedWidget; omitted if the widget isn't shared */
+  id?: string;
+  /** Width of the widget in logical pixels; omitted if the widget must occupy the whole width of the message bubble */
+  width?: number;
+  /** Height of the widget in logical pixels; omitted if the height of the widget isn't fixed */
+  height?: number;
+  /** HTML code of the widget */
+  html: string;
+  /** Public data of the widget, which is available wherever the widget is shown. All messages with a shared widget have the same public data. */
+  public_data?: string;
+  /** Data of the widget, which is specific to the message */
+  chat_data?: string;
 }
 
 /** Describes a service message about a change in the price of direct messages sent to a channel chat. */
